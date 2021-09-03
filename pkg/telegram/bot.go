@@ -12,7 +12,7 @@ type Bot struct {
 
 func NewBot(bot *tgbotapi.BotAPI, service *service.Service) *Bot {
 	return &Bot{
-		bot: bot,
+		bot:     bot,
 		service: service,
 	}
 }

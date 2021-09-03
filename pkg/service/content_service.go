@@ -137,7 +137,7 @@ func (s *ContentService) getAyatKeyboardFromAyatState(chatId int64, ayat qbot.Ay
 	if ayat.Id == 1 {
 		nextAyat, err := s.repo.GetAyatById(chatId, ayat.Id+1)
 		if err != nil {
-			return tgbotapi.InlineKeyboardMarkup{},err
+			return tgbotapi.InlineKeyboardMarkup{}, err
 		}
 		keyboard = tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
@@ -153,7 +153,7 @@ func (s *ContentService) getAyatKeyboardFromAyatState(chatId int64, ayat qbot.Ay
 	} else if ayat.Id == 5737 {
 		prevAyat, err := s.repo.GetAyatById(chatId, ayat.Id-1)
 		if err != nil {
-			return tgbotapi.InlineKeyboardMarkup{},err
+			return tgbotapi.InlineKeyboardMarkup{}, err
 		}
 		keyboard = tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
@@ -167,13 +167,13 @@ func (s *ContentService) getAyatKeyboardFromAyatState(chatId int64, ayat qbot.Ay
 			),
 		)
 	} else {
-		prevAyat, err := s.repo.GetAyatById(chatId, ayat.Id - 1)
+		prevAyat, err := s.repo.GetAyatById(chatId, ayat.Id-1)
 		if err != nil {
-			return tgbotapi.InlineKeyboardMarkup{},err
+			return tgbotapi.InlineKeyboardMarkup{}, err
 		}
-		nextAyat, err := s.repo.GetAyatById(chatId, ayat.Id + 1)
+		nextAyat, err := s.repo.GetAyatById(chatId, ayat.Id+1)
 		if err != nil {
-			return tgbotapi.InlineKeyboardMarkup{},err
+			return tgbotapi.InlineKeyboardMarkup{}, err
 		}
 		keyboard = tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
@@ -257,7 +257,7 @@ func (s *ContentService) getAyatKeyboardFromFavoriteState(chatId int64, ayat qbo
 	if ayat.Id == 1 {
 		nextAyat, err := s.repo.GetAyatById(chatId, ayat.Id+1)
 		if err != nil {
-			return tgbotapi.InlineKeyboardMarkup{},err
+			return tgbotapi.InlineKeyboardMarkup{}, err
 		}
 		keyboard = tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
@@ -273,7 +273,7 @@ func (s *ContentService) getAyatKeyboardFromFavoriteState(chatId int64, ayat qbo
 	} else if ayat.Id == 5737 {
 		prevAyat, err := s.repo.GetAyatById(chatId, ayat.Id-1)
 		if err != nil {
-			return tgbotapi.InlineKeyboardMarkup{},err
+			return tgbotapi.InlineKeyboardMarkup{}, err
 		}
 		keyboard = tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
@@ -287,13 +287,13 @@ func (s *ContentService) getAyatKeyboardFromFavoriteState(chatId int64, ayat qbo
 			),
 		)
 	} else {
-		prevAyat, err := s.repo.GetAyatById(chatId, ayat.Id - 1)
+		prevAyat, err := s.repo.GetAyatById(chatId, ayat.Id-1)
 		if err != nil {
-			return tgbotapi.InlineKeyboardMarkup{},err
+			return tgbotapi.InlineKeyboardMarkup{}, err
 		}
-		nextAyat, err := s.repo.GetAyatById(chatId, ayat.Id + 1)
+		nextAyat, err := s.repo.GetAyatById(chatId, ayat.Id+1)
 		if err != nil {
-			return tgbotapi.InlineKeyboardMarkup{},err
+			return tgbotapi.InlineKeyboardMarkup{}, err
 		}
 		keyboard = tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
