@@ -23,14 +23,21 @@ type Content interface {
 	RemoveFromFavorite(chatId int64, ayatId int) error
 }
 
+type Prayer interface {
+	GetPrayer(chatId int64) ([]qbot.Prayer, error)
+	SubscriberHasCity(chatId int64) (bool, error)
+}
+
 type Repository struct {
 	Bot
 	Content
+	Prayer
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{
 		Bot:     NewBotPostgres(db),
 		Content: NewContentPostgres(db),
+		Prayer:  NewPrayerPostgres(db),
 	}
 }

@@ -12,6 +12,7 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) error {
 		`\d.?:.?\d`:     b.searchAyatBySuraAyatNum,
 		`(И|и)збранное`: b.getFavoriteAyats,
 		`(П|п)одкасты`:  b.getRandomPodcast,
+		`Время намаза`:  b.getPrayerTimes,
 	}
 	for pattern, handler := range patterns {
 		if path(pattern, message.Text) {
@@ -23,6 +24,19 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) error {
 		}
 	}
 	return errors.New("unknow pattern")
+}
+
+func (b Bot) getPrayerTimes(message *tgbotapi.Message) error {
+	answer, err := b.service.GetPrayer(message.Chat.ID)
+	if err != nil {
+		if err.Error() == "subscriber hasn't city" {
+			answer = "subscriber hasn't city"
+		} else {
+			return err
+		}
+	}
+	b.SendMessage(message.Chat.ID, answer)
+	return nil
 }
 
 func (b Bot) getRandomPodcast(message *tgbotapi.Message) error {

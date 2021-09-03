@@ -24,14 +24,20 @@ type Content interface {
 	RemoveFromFavorite(chatId int64, ayatId int, state string) (string, tgbotapi.InlineKeyboardMarkup, error)
 }
 
+type Prayer interface {
+	GetPrayer(chatId int64) (string, error)
+}
+
 type Service struct {
 	Bot
 	Content
+	Prayer
 }
 
 func NewService(repos *repository.Repository) *Service {
 	return &Service{
 		Bot:     NewBotService(repos.Bot),
 		Content: NewContentService(repos.Content),
+		Prayer:  NewPrayerService(repos.Prayer),
 	}
 }
