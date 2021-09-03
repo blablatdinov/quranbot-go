@@ -33,7 +33,7 @@ func (r *PrayerPostgres) GetPrayer(chatId int64) ([]qbot.Prayer, error) {
 	var ayats []qbot.Prayer
 	query := `
 		select
-			city.name,
+			city.name as city_name,
 			day.date,
 			p.time
 		from prayer_prayer p

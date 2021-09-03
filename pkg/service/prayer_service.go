@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"qbot/pkg/repository"
 )
@@ -23,9 +24,27 @@ func (s *PrayerService) GetPrayer(chatId int64) (string, error) {
 		return "", errors.New("subscriber hasn't city")
 	}
 	prayers, err := s.repo.GetPrayer(chatId)
-	log.Printf("%d\n", len(prayers))
+	log.Printf("City name: %s\n", prayers[0].CityName)
+	messageTemplate := "Время намаза для города: %s (%s)\n\n" +
+		"Иртәнге: %s\n" +
+		"Восход: %s\n" +
+		"Өйлә: %s\n" +
+		"Икенде: %s\n" +
+		"Ахшам: %s\n" +
+		"Ястү: %s\n"
+	message := fmt.Sprintf(
+		messageTemplate,
+		prayers[0].CityName,
+		prayers[0].Date.Format("02.01.2006"),
+		prayers[0].Time.Format("15:04"),
+		prayers[1].Time.Format("15:04"),
+		prayers[2].Time.Format("15:04"),
+		prayers[3].Time.Format("15:04"),
+		prayers[4].Time.Format("15:04"),
+		prayers[5].Time.Format("15:04"),
+	)
 	if len(prayers) == 0 {
 		return "", errors.New("null prayers")
 	}
-	return prayers[0].Name, err
+	return message, err
 }
