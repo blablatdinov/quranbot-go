@@ -47,7 +47,11 @@ func (b *Bot) removeFromFavorite(callbackQuery *tgbotapi.CallbackQuery) error {
 	if err != nil {
 		return err
 	}
-	res, keyboard, err := b.service.RemoveFromFavorite(chatId, ayatId)
+	state, err := b.service.GetSubscriberState(chatId)
+	if err != nil {
+		return err
+	}
+	res, keyboard, err := b.service.RemoveFromFavorite(chatId, ayatId, state)
 	if err != nil {
 		return err
 	}
@@ -69,7 +73,11 @@ func (b *Bot) addToFavorite(callbackQuery *tgbotapi.CallbackQuery) error {
 		return err
 	}
 	chatId := callbackQuery.Message.Chat.ID
-	res, keyboard, err := b.service.AddToFavorite(chatId, ayatId)
+	state, err := b.service.GetSubscriberState(chatId)
+	if err != nil {
+		return err
+	}
+	res, keyboard, err := b.service.AddToFavorite(chatId, ayatId, state)
 	if err != nil {
 		return err
 	}
@@ -92,7 +100,11 @@ func (b *Bot) swipeToAyat(callbackQuery *tgbotapi.CallbackQuery) error {
 	if err != nil {
 		return err
 	}
-	answer, keyboard, err := b.service.GetAyatById(chatId, ayatId)
+	state, err := b.service.GetSubscriberState(chatId)
+	if err != nil {
+		return err
+	}
+	answer, keyboard, err := b.service.GetAyatById(chatId, ayatId, state)
 	msg := tgbotapi.NewEditMessageText(chatId, messageId, answer)
 	msg.ParseMode = "markdown"
 	b.bot.Send(msg)

@@ -16,6 +16,10 @@ func NewContentPostgres(db *sqlx.DB) *ContentPostgres {
 	return &ContentPostgres{db: db}
 }
 
+const (
+	defaultAyatFields = "a.id, a.ayat, a.content, s.number as sura_number, s.link as sura_link"
+)
+
 func (r *ContentPostgres) GetAyatByMailingDay(mailingDay int) (qbot.Ayat, error) {
 	var ayat qbot.Ayat
 	query := `
@@ -174,4 +178,24 @@ func (r *ContentPostgres) AddToFavorite(chatId int64, ayatId int) error {
 	returning id`
 	_, err := r.db.Exec(query, subscriberId, ayatId)
 	return err
+}
+
+func (r *ContentPostgres) GetAdjacentAyats(chatId int64, ayatId int) ([]qbot.Ayat, error) {
+	var ayats []qbot.Ayat
+	query := fmt.Sprintf(`
+	select %s
+	from (
+		select 
+			%s,
+			lag(a.id) over (order by a.id asc) as prev,
+			lead(a.id) over (order by a.id asc) as next
+		from content_ayat a
+			inner join bot_init_subscriber_favourite_ayats fa on a.id = fa.ayat_id
+			inner join bot_init_subscriber sub on sub.id = fa.subscriber_id
+			inner join content_sura s on s.id = a.sura_id
+		where sub.tg_chat_id = $1
+		) x
+	where $2 IN (id, prev, next)`, defaultAyatFields, defaultAyatFields)
+	err := r.db.Select(&ayats, query, chatId, ayatId)
+	return ayats, err
 }

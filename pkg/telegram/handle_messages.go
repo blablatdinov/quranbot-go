@@ -71,7 +71,7 @@ func (b Bot) searchAyatBySuraAyatNum(message *tgbotapi.Message) error {
 		return err
 	}
 	log.Printf("searchAyatBySuraAyatNum: search '%s' ayat\n", message.Text)
-	answer, keyboard, err := b.service.GetAyatBySuraAyatNum(message.Chat.ID, message.Text)
+	answer, keyboard, err := b.service.GetAyatBySuraAyatNum(message.Chat.ID, message.Text, "")
 	ayatNotFoundText := "Аят не найден"
 	suraNotFoundText := "Сура не найдена"
 	msg := tgbotapi.NewMessage(message.Chat.ID, answer)

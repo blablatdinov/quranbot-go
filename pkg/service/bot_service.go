@@ -48,7 +48,15 @@ func (s *BotService) CreateSubscriber(chatId int64) (string, bool) {
 	}
 }
 
-func (s *BotService)SetSubscriberState(chatId int64, step string) error{
+func (s *BotService) SetSubscriberState(chatId int64, step string) error {
 	err := s.repo.SetSubscriberState(chatId, step)
 	return err
+}
+
+func (s *BotService) GetSubscriberState(chatId int64) (string, error) {
+	state, err := s.repo.GetSubscriberState(chatId)
+	if err != nil {
+		return "", err
+	}
+	return state, err
 }

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"log"
 	"qbot"
 	"qbot/pkg/repository"
 	"strconv"
@@ -30,7 +29,7 @@ func (s *ContentService) GetAyatByMailingDay(mailingDay int) (string, error) {
 	return content, err
 }
 
-func (s *ContentService) GetAyatBySuraAyatNum(chatId int64, query string) (string, tgbotapi.InlineKeyboardMarkup, error) {
+func (s *ContentService) GetAyatBySuraAyatNum(chatId int64, query string, state string) (string, tgbotapi.InlineKeyboardMarkup, error) {
 	splittedQuery := strings.Split(query, ":")
 	suraNum, err := strconv.Atoi(strings.TrimSpace(splittedQuery[0]))
 	if err != nil {
@@ -54,7 +53,10 @@ func (s *ContentService) GetAyatBySuraAyatNum(chatId int64, query string) (strin
 		}
 	}
 	targetAyat.IsFavorite = s.repo.AyatIsFavorite(chatId, targetAyat.Id)
-	keyboard := s.getAyatKeyboard(chatId, targetAyat)
+	keyboard, err := s.getAyatKeyboard(chatId, targetAyat, state)
+	if err != nil {
+		return "", tgbotapi.InlineKeyboardMarkup{}, err
+	}
 	return renderAyat(targetAyat), keyboard, nil
 }
 
@@ -87,31 +89,34 @@ func (s *ContentService) GetRandomPodcast() (qbot.Podcast, error) {
 	return podcast, nil
 }
 
-func (s *ContentService) GetAyatById(chatId int64, ayatId int) (string, tgbotapi.InlineKeyboardMarkup, error) {
+func (s *ContentService) GetAyatById(chatId int64, ayatId int, state string) (string, tgbotapi.InlineKeyboardMarkup, error) {
 	ayat, err := s.repo.GetAyatById(chatId, ayatId)
 	if err != nil {
 		return "", tgbotapi.InlineKeyboardMarkup{}, err
 	}
-	keyboard := s.getAyatKeyboard(chatId, ayat)
+	keyboard, err := s.getAyatKeyboard(chatId, ayat, state)
+	if err != nil {
+		return "", tgbotapi.InlineKeyboardMarkup{}, err
+	}
 	return renderAyat(ayat), keyboard, nil
 }
 
-func (s *ContentService) AddToFavorite(chatId int64, ayatId int) (string, tgbotapi.InlineKeyboardMarkup, error) {
+func (s *ContentService) AddToFavorite(chatId int64, ayatId int, state string) (string, tgbotapi.InlineKeyboardMarkup, error) {
 	if err := s.repo.AddToFavorite(chatId, ayatId); err != nil {
 		return "", tgbotapi.InlineKeyboardMarkup{}, err
 	}
-	_, keyboard, err := s.GetAyatById(chatId, ayatId)
+	_, keyboard, err := s.GetAyatById(chatId, ayatId, state)
 	if err != nil {
 		return "", tgbotapi.InlineKeyboardMarkup{}, err
 	}
 	return "Аят добавлен в избранное", keyboard, nil
 }
 
-func (s *ContentService) RemoveFromFavorite(chatId int64, ayatId int) (string, tgbotapi.InlineKeyboardMarkup, error) {
+func (s *ContentService) RemoveFromFavorite(chatId int64, ayatId int, state string) (string, tgbotapi.InlineKeyboardMarkup, error) {
 	if err := s.repo.RemoveFromFavorite(chatId, ayatId); err != nil {
 		return "", tgbotapi.InlineKeyboardMarkup{}, err
 	}
-	_, keyboard, err := s.GetAyatById(chatId, ayatId)
+	_, keyboard, err := s.GetAyatById(chatId, ayatId, state)
 	if err != nil {
 		return "", tgbotapi.InlineKeyboardMarkup{}, err
 	}
@@ -127,25 +132,12 @@ func getAyatIndex(ayatId int, ayats []qbot.Ayat) int {
 	return 0
 }
 
-func (s *ContentService) getAyatKeyboard(chatId int64, ayat qbot.Ayat) tgbotapi.InlineKeyboardMarkup {
+func (s *ContentService) getAyatKeyboardFromAyatState(chatId int64, ayat qbot.Ayat, addToFavoriteButton tgbotapi.InlineKeyboardButton) (tgbotapi.InlineKeyboardMarkup, error) {
 	var keyboard tgbotapi.InlineKeyboardMarkup
-	var textForFavorButton string
-	var dataForFavorButtonTemplate string
-	if ayat.IsFavorite {
-		textForFavorButton = "Удалить из избранного"
-		dataForFavorButtonTemplate = "removeFromFavorite(%d)"
-	} else {
-		textForFavorButton = "Добавить в избранное"
-		dataForFavorButtonTemplate = "addToFavorite(%d)"
-	}
-	addToFavoriteButton := tgbotapi.NewInlineKeyboardButtonData(
-		textForFavorButton,
-		fmt.Sprintf(dataForFavorButtonTemplate, ayat.Id),
-	)
 	if ayat.Id == 1 {
 		nextAyat, err := s.repo.GetAyatById(chatId, ayat.Id+1)
 		if err != nil {
-			log.Println(err)
+			return tgbotapi.InlineKeyboardMarkup{},err
 		}
 		keyboard = tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
@@ -161,7 +153,7 @@ func (s *ContentService) getAyatKeyboard(chatId int64, ayat qbot.Ayat) tgbotapi.
 	} else if ayat.Id == 5737 {
 		prevAyat, err := s.repo.GetAyatById(chatId, ayat.Id-1)
 		if err != nil {
-			log.Println(err)
+			return tgbotapi.InlineKeyboardMarkup{},err
 		}
 		keyboard = tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
@@ -177,11 +169,11 @@ func (s *ContentService) getAyatKeyboard(chatId int64, ayat qbot.Ayat) tgbotapi.
 	} else {
 		prevAyat, err := s.repo.GetAyatById(chatId, ayat.Id - 1)
 		if err != nil {
-			log.Fatal(err.Error())
+			return tgbotapi.InlineKeyboardMarkup{},err
 		}
 		nextAyat, err := s.repo.GetAyatById(chatId, ayat.Id + 1)
 		if err != nil {
-			log.Fatal(err.Error())
+			return tgbotapi.InlineKeyboardMarkup{},err
 		}
 		keyboard = tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
@@ -199,7 +191,156 @@ func (s *ContentService) getAyatKeyboard(chatId int64, ayat qbot.Ayat) tgbotapi.
 			),
 		)
 	}
-	return keyboard
+	return keyboard, nil
+}
+
+func (s *ContentService) getAdjacentAyatsKeyboard(chatId int64, ayatId int) (tgbotapi.InlineKeyboardMarkup, error) {
+	var keyboard tgbotapi.InlineKeyboardMarkup
+	ayats, err := s.repo.GetAdjacentAyats(chatId, ayatId)
+	if err != nil {
+		return keyboard, err
+	}
+	removeFromFavoriteButton := tgbotapi.NewInlineKeyboardButtonData(
+		"Удалить из избранного",
+		fmt.Sprintf("removeFromFavorite(%d)", ayatId),
+	)
+	if ayatId == ayats[0].Id {
+		nextAyat := ayats[1]
+		keyboard = tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				removeFromFavoriteButton,
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(
+					nextAyat.GetSuraAyatNum(),
+					fmt.Sprintf("getAyat(%d)", nextAyat.Id),
+				),
+			),
+		)
+	} else if ayatId == ayats[len(ayats)].Id {
+		prevAyat := ayats[len(ayats)]
+		keyboard = tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				removeFromFavoriteButton,
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(
+					prevAyat.GetSuraAyatNum(),
+					fmt.Sprintf("getAyat(%d)", ayats[len(ayats)-1].Id),
+				),
+			),
+		)
+	} else {
+		prevAyat := ayats[len(ayats)-1]
+		nextAyat := ayats[ayatId+1]
+		keyboard = tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				removeFromFavoriteButton,
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(
+					prevAyat.GetSuraAyatNum(),
+					fmt.Sprintf("getAyat(%d)", prevAyat.Id),
+				),
+				tgbotapi.NewInlineKeyboardButtonData(
+					nextAyat.GetSuraAyatNum(),
+					fmt.Sprintf("getAyat(%d)", nextAyat.Id),
+				),
+			),
+		)
+	}
+	return keyboard, nil
+}
+
+func (s *ContentService) getAyatKeyboardFromFavoriteState(chatId int64, ayat qbot.Ayat, addToFavoriteButton tgbotapi.InlineKeyboardButton) (tgbotapi.InlineKeyboardMarkup, error) {
+	var keyboard tgbotapi.InlineKeyboardMarkup
+	if ayat.Id == 1 {
+		nextAyat, err := s.repo.GetAyatById(chatId, ayat.Id+1)
+		if err != nil {
+			return tgbotapi.InlineKeyboardMarkup{},err
+		}
+		keyboard = tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				addToFavoriteButton,
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(
+					nextAyat.GetSuraAyatNum(),
+					fmt.Sprintf("getAyat(%d)", ayat.Id+1),
+				),
+			),
+		)
+	} else if ayat.Id == 5737 {
+		prevAyat, err := s.repo.GetAyatById(chatId, ayat.Id-1)
+		if err != nil {
+			return tgbotapi.InlineKeyboardMarkup{},err
+		}
+		keyboard = tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				addToFavoriteButton,
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(
+					prevAyat.GetSuraAyatNum(),
+					fmt.Sprintf("getAyat(%d)", ayat.Id-1),
+				),
+			),
+		)
+	} else {
+		prevAyat, err := s.repo.GetAyatById(chatId, ayat.Id - 1)
+		if err != nil {
+			return tgbotapi.InlineKeyboardMarkup{},err
+		}
+		nextAyat, err := s.repo.GetAyatById(chatId, ayat.Id + 1)
+		if err != nil {
+			return tgbotapi.InlineKeyboardMarkup{},err
+		}
+		keyboard = tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				addToFavoriteButton,
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(
+					prevAyat.GetSuraAyatNum(),
+					fmt.Sprintf("getAyat(%d)", ayat.Id-1),
+				),
+				tgbotapi.NewInlineKeyboardButtonData(
+					nextAyat.GetSuraAyatNum(),
+					fmt.Sprintf("getAyat(%d)", ayat.Id+1),
+				),
+			),
+		)
+	}
+	return keyboard, nil
+}
+
+func (s *ContentService) getAyatKeyboard(chatId int64, ayat qbot.Ayat, state string) (tgbotapi.InlineKeyboardMarkup, error) {
+	var textForFavorButton string
+	var dataForFavorButtonTemplate string
+	if ayat.IsFavorite {
+		textForFavorButton = "Удалить из избранного"
+		dataForFavorButtonTemplate = "removeFromFavorite(%d)"
+	} else {
+		textForFavorButton = "Добавить в избранное"
+		dataForFavorButtonTemplate = "addToFavorite(%d)"
+	}
+	addToFavoriteButton := tgbotapi.NewInlineKeyboardButtonData(
+		textForFavorButton,
+		fmt.Sprintf(dataForFavorButtonTemplate, ayat.Id),
+	)
+	if state == "" {
+		keyboard, err := s.getAyatKeyboardFromAyatState(chatId, ayat, addToFavoriteButton)
+		if err != nil {
+			return tgbotapi.InlineKeyboardMarkup{}, err
+		}
+		return keyboard, nil
+	} else {
+		keyboard, err := s.getAdjacentAyatsKeyboard(chatId, ayat.Id)
+		if err != nil {
+			return tgbotapi.InlineKeyboardMarkup{}, err
+		}
+		return keyboard, nil
+	}
 }
 
 func getTextAndDataForFavoriteButton(isFavorite bool) (string, string) {
