@@ -6,3 +6,6 @@ build_linux:
 
 run:
 	go run cmd/main.go
+
+lint:
+	go fmt .
