@@ -101,3 +101,38 @@ func (r *BotPostgres) GetAyatByMailingDay(mailingDay int) (qbot.Ayat, error) {
 	}
 	return ayat, nil
 }
+
+func (r *BotPostgres) GetActiveSubscribers() ([]qbot.Subscriber, error) {
+	var subscribers []qbot.Subscriber
+	query := `
+	select 
+		tg_chat_id
+	from bot_init_subscriber
+	where is_active = 't'
+	`
+	err := r.db.Select(&subscribers, query)
+	return subscribers, err
+}
+
+func GenerateConditionForDeactivatingSubscribers(chatIds []int64) string {
+	result := "where "
+	var or string
+	for i, chatId := range chatIds {
+		if i == len(chatIds) - 1 {
+			or = ""
+		} else {
+			or = " or "
+		}
+		result += fmt.Sprintf("tg_chat_id=%d%s", chatId, or)
+	}
+	return result
+}
+
+func (r *BotPostgres) DeactivateSubscribers(chatIds []int64) error {
+	query := fmt.Sprintf(`
+	update bot_init_subscriber
+	set is_active = 'f'
+	%s`, GenerateConditionForDeactivatingSubscribers(chatIds))
+	_, err := r.db.Exec(query)
+	return err
+}

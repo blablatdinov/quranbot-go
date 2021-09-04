@@ -1,8 +1,10 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"qbot"
 	"qbot/pkg/repository"
 )
 
@@ -57,4 +59,17 @@ func (s *BotService) GetAyatByMailingDay(mailingDay int) (string, error) {
 		return "", err
 	}
 	return content, err
+}
+
+func (s *BotService) GetActiveSubscribers() ([]qbot.Subscriber, error) {
+	subscribers, err := s.repo.GetActiveSubscribers()
+	return subscribers, err
+}
+
+func (s *BotService) DeactivateSubscribers(chatIds []int64) error {
+	if len(chatIds) == 0 {
+		return errors.New("len(chatIds) must be more 0")
+	}
+	err := s.repo.DeactivateSubscribers(chatIds)
+	return err
 }

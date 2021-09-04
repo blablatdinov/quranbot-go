@@ -12,6 +12,8 @@ type Bot interface {
 	SetSubscriberState(chatId int64, step string) error
 	GetSubscriberState(chatId int64) (string, error)
 	GetAyatByMailingDay(mailingDay int) (string, error)
+	GetActiveSubscribers() ([]qbot.Subscriber, error)
+	DeactivateSubscribers([]int64) error
 }
 
 type Content interface {
