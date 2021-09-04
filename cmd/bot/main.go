@@ -20,7 +20,8 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	botApi.Debug = false
+	debugMode := os.Getenv("DEBUG") == "true"
+	botApi.Debug = debugMode
 	databaseUrl := os.Getenv("DATABASE_URL")
 	if databaseUrl == "" {
 		log.Fatalln("Set DATABASE_URL enviroment variable")

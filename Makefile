@@ -8,7 +8,7 @@ build_linux:
 	GOOS=linux GOARCH=amd64 go build -o ./bin/qbot_linux cmd/bot/main.go
 
 run:
-	go run cmd/main.go
+	go run cmd/bot/main.go
 
 lint:
 	go fmt .
