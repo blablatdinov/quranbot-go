@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/jmoiron/sqlx"
 	"qbot"
+	"time"
 )
 
 type PrayerPostgres struct {
@@ -29,8 +30,8 @@ func (r *PrayerPostgres) SubscriberHasCity(chatId int64) (bool, error) {
 	}
 }
 
-func (r *PrayerPostgres) GetPrayer(chatId int64) ([]qbot.Prayer, error) {
-	var ayats []qbot.Prayer
+func (r *PrayerPostgres) GetPrayer(chatId int64, date time.Time) ([]qbot.Prayer, error) {
+	var prayers []qbot.Prayer
 	query := `
 		select
 			city.name as city_name,
@@ -40,7 +41,7 @@ func (r *PrayerPostgres) GetPrayer(chatId int64) ([]qbot.Prayer, error) {
 		inner join prayer_city city on city.id = p.city_id
 		inner join bot_init_subscriber sub on city.id = sub.city_id
 		inner join prayer_day day on p.day_id = day.id
-		where sub.tg_chat_id = $1`
-	err := r.db.Select(&ayats, query, chatId)
-	return ayats, err
+		where sub.tg_chat_id = $1 and day.date = $2`
+	err := r.db.Select(&prayers, query, chatId, date.Format("01-01-2006"))
+	return prayers, err
 }

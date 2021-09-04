@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/jmoiron/sqlx"
 	"qbot"
+	"time"
 )
 
 type Bot interface {
@@ -25,7 +26,7 @@ type Content interface {
 }
 
 type Prayer interface {
-	GetPrayer(chatId int64) ([]qbot.Prayer, error)
+	GetPrayer(chatId int64, date time.Time) ([]qbot.Prayer, error)
 	SubscriberHasCity(chatId int64) (bool, error)
 }
 

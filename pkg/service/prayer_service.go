@@ -3,8 +3,8 @@ package service
 import (
 	"errors"
 	"fmt"
-	"log"
 	"qbot/pkg/repository"
+	"time"
 )
 
 type PrayerService struct {
@@ -23,8 +23,10 @@ func (s *PrayerService) GetPrayer(chatId int64) (string, error) {
 	if !subscriberHasCity {
 		return "", errors.New("subscriber hasn't city")
 	}
-	prayers, err := s.repo.GetPrayer(chatId)
-	log.Printf("City name: %s\n", prayers[0].CityName)
+	prayers, err := s.repo.GetPrayer(chatId, time.Now())
+	if len(prayers) == 0 {
+		return "", errors.New("null prayers")
+	}
 	messageTemplate := "Время намаза для города: %s (%s)\n\n" +
 		"Иртәнге: %s\n" +
 		"Восход: %s\n" +
@@ -43,8 +45,5 @@ func (s *PrayerService) GetPrayer(chatId int64) (string, error) {
 		prayers[4].Time.Format("15:04"),
 		prayers[5].Time.Format("15:04"),
 	)
-	if len(prayers) == 0 {
-		return "", errors.New("null prayers")
-	}
 	return message, err
 }
