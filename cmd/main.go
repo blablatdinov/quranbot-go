@@ -1,7 +1,9 @@
 package main
 
 import (
+	"github.com/joho/godotenv"
 	"log"
+	"os"
 	"qbot/pkg/repository"
 	"qbot/pkg/service"
 	"qbot/pkg/telegram"
@@ -11,13 +13,19 @@ import (
 )
 
 func main() {
-	botApi, err := tgbotapi.NewBotAPI("452230948:AAFBRxigSQIg1PZJTjrY6c3OHFvTnKDP_AA")
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("error loading env variables: %s", err.Error())
+	}
+	botApi, err := tgbotapi.NewBotAPI(os.Getenv("BOT_TOKEN"))
 	if err != nil {
 		log.Panic(err)
 	}
 	botApi.Debug = false
-
-	db, err := repository.NewPostgres()
+	databaseUrl := os.Getenv("DATABASE_URL")
+	if databaseUrl == "" {
+		log.Fatalln("Set DATABASE_URL enviroment variable")
+	}
+	db, err := repository.NewPostgres(databaseUrl)
 	if err != nil {
 		log.Println(err.Error())
 	}

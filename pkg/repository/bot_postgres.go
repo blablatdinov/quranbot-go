@@ -77,3 +77,27 @@ func (r *BotPostgres) GetSubscriberState(chatId int64) (string, error) {
 	err := r.db.Get(&state, query, chatId)
 	return state, err
 }
+
+func (r *BotPostgres) GetAyatByMailingDay(mailingDay int) (qbot.Ayat, error) {
+	var ayat qbot.Ayat
+	query := `
+		select 
+			a.id,
+		    a.content,
+		    a.arab_text,
+		    a.trans,
+		    a.sura_id,
+		    s.link as sura_link,
+		    a.ayat,
+		    a.html,
+		    a.audio_id,
+		    a.one_day_content_id
+		from content_ayat a
+		inner join content_morningcontent cm on a.one_day_content_id = cm.id
+		inner join content_sura s on a.sura_id = s.id
+		where cm.day = $1`
+	if err := r.db.Get(&ayat, query, mailingDay); err != nil {
+		return qbot.Ayat{}, err
+	}
+	return ayat, nil
+}

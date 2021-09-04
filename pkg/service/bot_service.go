@@ -16,19 +16,6 @@ func NewBotService(repo repository.Bot) *BotService {
 	}
 }
 
-func (s *BotService) GetAyatByMailingDay(mailingDay int) (string, error) {
-	db, err := repository.NewPostgres()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	contentService := NewContentService(repository.NewContentPostgres(db))
-	content, err := contentService.GetAyatByMailingDay(mailingDay)
-	if err != nil {
-		return "", err
-	}
-	return content, nil
-}
-
 func (s *BotService) CreateSubscriber(chatId int64) (string, bool) {
 	subscriber, created, err := s.repo.GetOrCreateSubscriber(chatId)
 	if err != nil {
@@ -59,4 +46,15 @@ func (s *BotService) GetSubscriberState(chatId int64) (string, error) {
 		return "", err
 	}
 	return state, err
+}
+
+func (s *BotService) GetAyatByMailingDay(mailingDay int) (string, error) {
+	ayat, err := s.repo.GetAyatByMailingDay(mailingDay)
+	contentTemplate := "%d: %s) %s\n\nСсылка на %s"
+	suraLink := fmt.Sprintf("[источник](https://umma.ru%s)", ayat.SuraLink)
+	content := fmt.Sprintf(contentTemplate, 1, ayat.Ayat, ayat.Content, suraLink)
+	if err != nil {
+		return "", err
+	}
+	return content, err
 }

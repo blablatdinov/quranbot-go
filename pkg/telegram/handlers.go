@@ -21,7 +21,7 @@ func (b *Bot) handleStartCommand(message *tgbotapi.Message) error {
 	regAnswer, created := b.service.CreateSubscriber(message.Chat.ID)
 	messages := []string{regAnswer}
 	if created {
-		content, err := b.service.GetAyatByMailingDay(1)
+		content, err := b.service.Bot.GetAyatByMailingDay(1)
 		if err != nil {
 			return err
 		}

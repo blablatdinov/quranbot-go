@@ -11,6 +11,7 @@ type Bot interface {
 	GetDefaultKeyboard() tgbotapi.ReplyKeyboardMarkup
 	SetSubscriberState(chatId int64, step string) error
 	GetSubscriberState(chatId int64) (string, error)
+	GetAyatByMailingDay(mailingDay int) (string, error)
 }
 
 type Content interface {

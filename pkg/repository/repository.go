@@ -9,6 +9,7 @@ type Bot interface {
 	GetOrCreateSubscriber(chatId int64) (qbot.Subscriber, bool, error)
 	SetSubscriberState(chatId int64, step string) error
 	GetSubscriberState(chatId int64) (string, error)
+	GetAyatByMailingDay(mailingDay int) (qbot.Ayat, error)
 }
 
 type Content interface {
