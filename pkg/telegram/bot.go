@@ -2,9 +2,12 @@ package telegram
 
 import (
 	"errors"
+	"fmt"
 	"github.com/go-co-op/gocron"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
+	"net/http"
+	"os"
 	"qbot"
 	"qbot/pkg/service"
 	"sync"
@@ -27,10 +30,42 @@ func NewBot(bot *tgbotapi.BotAPI, service *service.Service, goCron *gocron.Sched
 func (b *Bot) Start() error {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
+	var updates tgbotapi.UpdatesChannel
+	webhookHost := os.Getenv("WEBHOOK_HOST")
 
-	updates, err := b.bot.GetUpdatesChan(u)
-	if err != nil {
-		return err
+	if webhookHost == "" {
+		_, err := b.bot.RemoveWebhook()
+		if err != nil {
+			return err
+		}
+		updates, err = b.bot.GetUpdatesChan(u)
+		if err != nil {
+			return err
+		}
+		log.Println("Bot started on long polling...")
+	} else {
+		_, err := b.bot.RemoveWebhook()
+		if err != nil {
+			return err
+		}
+		log.Printf("Setting webhook on %s...\n", webhookHost)
+		_, err = b.bot.SetWebhook(tgbotapi.NewWebhook(webhookHost + b.bot.Token))
+		if err != nil {
+			log.Fatalf("Setting webhook error: %s", err.Error())
+			return err
+		}
+		log.Println("Getting webhook info...")
+		info, err := b.bot.GetWebhookInfo()
+		if err != nil {
+			return err
+		}
+		if info.LastErrorDate != 0 {
+			return errors.New(fmt.Sprintf("Telegram callback failed: %s", info.LastErrorMessage))
+		}
+		log.Println("Getting updates channel...")
+		updates = b.bot.ListenForWebhook("/" + b.bot.Token)
+		go http.ListenAndServe("localhost:8012", nil)
+		log.Println("Bot started on webhook...")
 	}
 
 	for update := range updates {
