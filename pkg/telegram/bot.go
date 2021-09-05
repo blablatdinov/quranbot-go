@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"errors"
-	"fmt"
 	"github.com/go-co-op/gocron"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
@@ -23,21 +22,6 @@ func NewBot(bot *tgbotapi.BotAPI, service *service.Service, goCron *gocron.Sched
 		service: service,
 		goCron:  goCron,
 	}
-}
-
-func (b *Bot) StartJobs() error {
-	jobs := map[string]interface{}{
-		"0 7 * * *": b.SendMorningContent,
-	}
-	for cronTime, job := range jobs {
-		_, err := b.goCron.Cron(cronTime).Do(job.(func() error))
-		if err != nil {
-			return err
-		}
-	}
-	b.goCron.StartAsync()
-	log.Printf("Cron started with jobs: %s\n", jobs)
-	return nil
 }
 
 func (b *Bot) Start() error {
@@ -89,7 +73,9 @@ ENDLOOP:
 }
 
 func (b *Bot) SendMorningContent() error {
+	log.Println("Send morning content task started...")
 	content, err := b.service.GetMorningContentForTodayMailing()
+	log.Println(len(content))
 	messagesChan := make(chan tgbotapi.Message, len(content))
 	var wg sync.WaitGroup
 	if err != nil {
@@ -102,7 +88,7 @@ func (b *Bot) SendMorningContent() error {
 		go func(messagesChan chan tgbotapi.Message, wg *sync.WaitGroup) {
 			message, err := b.SendMessage(chatId, content)
 			if err != nil {
-				fmt.Printf("Error: %s", err.Error())
+				log.Printf("Error: %s", err.Error())
 				wg.Done()
 				return
 			}
@@ -115,9 +101,18 @@ func (b *Bot) SendMorningContent() error {
 	go b.ReadMessagesChan(quitFromReadLoop, messagesChan, messageListChan)
 	wg.Wait()
 	quitFromReadLoop <- struct{}{}
-	messages := <-messageListChan
-	inactivatedSubscribers := difference(messages, content)
-	err = b.service.DeactivateSubscribers(inactivatedSubscribers)
+	<-messageListChan
+	if err != nil {
+		return err
+	}
+	var chatIdsForUpdateDay []int64
+	for _, c := range content {
+		chatIdsForUpdateDay = append(chatIdsForUpdateDay, c.ChatId)
+	}
+	err = b.service.UpdateDaysForSubscribers(chatIdsForUpdateDay)
+	if err != nil {
+		log.Println(err.Error())
+	}
 	return err
 }
 

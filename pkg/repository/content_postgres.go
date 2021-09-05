@@ -220,3 +220,12 @@ func (r *ContentPostgres) GetMorningContentForTodayMailing() ([]qbot.MailingCont
 	err := r.db.Select(&contentForMailing, query)
 	return contentForMailing, err
 }
+
+func (r *ContentPostgres) UpdateDaysForSubscribers(chatIds []int64) error {
+	query := fmt.Sprintf(`
+	update bot_init_subscriber
+	set day = day + 1
+	%s`, GenerateConditionForUpdatingSubscribers(chatIds))
+	_, err := r.db.Exec(query)
+	return err
+}

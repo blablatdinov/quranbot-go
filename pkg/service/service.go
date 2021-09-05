@@ -26,6 +26,7 @@ type Content interface {
 	AddToFavorite(chatId int64, ayatId int, state string) (string, tgbotapi.InlineKeyboardMarkup, error)
 	RemoveFromFavorite(chatId int64, ayatId int, state string) (string, tgbotapi.InlineKeyboardMarkup, error)
 	GetMorningContentForTodayMailing() ([]qbot.MailingContent, error)
+	UpdateDaysForSubscribers([]int64) error
 }
 
 type Prayer interface {

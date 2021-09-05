@@ -361,6 +361,14 @@ func (s *ContentService) GetMorningContentForTodayMailing() ([]qbot.MailingConte
 	return content, err
 }
 
+func (s *ContentService) UpdateDaysForSubscribers(chatIds []int64) error {
+	if len(chatIds) == 0 {
+		return errors.New("len(chatIds) must be more then 0")
+	}
+	err := s.repo.UpdateDaysForSubscribers(chatIds)
+	return err
+}
+
 func (s *ContentService) getFavoriteAyatsInlineKeyboard(ayats []qbot.Ayat, index int) tgbotapi.InlineKeyboardMarkup {
 	var keyboard tgbotapi.InlineKeyboardMarkup
 	textForFavorButton, dataForFavorButtonTemplate := getTextAndDataForFavoriteButton(true)

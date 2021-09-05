@@ -114,7 +114,7 @@ func (r *BotPostgres) GetActiveSubscribers() ([]qbot.Subscriber, error) {
 	return subscribers, err
 }
 
-func GenerateConditionForDeactivatingSubscribers(chatIds []int64) string {
+func GenerateConditionForUpdatingSubscribers(chatIds []int64) string {
 	result := "where "
 	var or string
 	for i, chatId := range chatIds {
@@ -132,7 +132,7 @@ func (r *BotPostgres) DeactivateSubscribers(chatIds []int64) error {
 	query := fmt.Sprintf(`
 	update bot_init_subscriber
 	set is_active = 'f'
-	%s`, GenerateConditionForDeactivatingSubscribers(chatIds))
+	%s`, GenerateConditionForUpdatingSubscribers(chatIds))
 	_, err := r.db.Exec(query)
 	return err
 }
