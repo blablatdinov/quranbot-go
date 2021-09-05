@@ -356,6 +356,11 @@ func getTextAndDataForFavoriteButton(isFavorite bool) (string, string) {
 	return textForFavorButton, dataForFavorButtonTemplate
 }
 
+func (s *ContentService) GetMorningContentForTodayMailing() ([]qbot.MailingContent, error) {
+	content, err := s.repo.GetMorningContentForTodayMailing()
+	return content, err
+}
+
 func (s *ContentService) getFavoriteAyatsInlineKeyboard(ayats []qbot.Ayat, index int) tgbotapi.InlineKeyboardMarkup {
 	var keyboard tgbotapi.InlineKeyboardMarkup
 	textForFavorButton, dataForFavorButtonTemplate := getTextAndDataForFavoriteButton(true)

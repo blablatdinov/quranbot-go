@@ -11,7 +11,7 @@ run:
 	go run cmd/bot/main.go
 
 lint:
-	go fmt .
+	go fmt ./...
 
 test:
 	go test -v ./...

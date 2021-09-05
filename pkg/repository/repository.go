@@ -25,6 +25,7 @@ type Content interface {
 	AddToFavorite(chatId int64, ayatId int) error
 	AyatIsFavorite(chatId int64, ayatId int) bool
 	RemoveFromFavorite(chatId int64, ayatId int) error
+	GetMorningContentForTodayMailing() ([]qbot.MailingContent, error)
 }
 
 type Prayer interface {

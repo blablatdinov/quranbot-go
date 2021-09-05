@@ -45,10 +45,11 @@ func (b *Bot) handleError(chatId int64, err error) error {
 	return nil
 }
 
-func (b *Bot) SendMessage(chatId int64, text string) {
+func (b *Bot) SendMessage(chatId int64, text string) (tgbotapi.Message, error) {
 	msg := tgbotapi.NewMessage(chatId, text)
 	msg.ParseMode = "markdown"
-	b.bot.Send(msg)
+	message, err := b.bot.Send(msg)
+	return message, err
 }
 
 func path(expression string, message string) bool {

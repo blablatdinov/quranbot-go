@@ -199,3 +199,24 @@ func (r *ContentPostgres) GetAdjacentAyats(chatId int64, ayatId int) ([]qbot.Aya
 	err := r.db.Select(&ayats, query, chatId, ayatId)
 	return ayats, err
 }
+
+func (r *ContentPostgres) GetMorningContentForTodayMailing() ([]qbot.MailingContent, error) {
+	var contentForMailing []qbot.MailingContent
+	query := `
+	select
+		s.tg_chat_id,
+		STRING_AGG(
+			'__' || sura.number::character varying || ':' || a.ayat || ')__ ' || a .content || '\n',
+			''
+			order by a.id
+		) as content,
+		STRING_AGG(sura.link, '|' order by a.id) as link
+	from bot_init_subscriber as s
+	inner join content_morningcontent as mc on s.day=mc.day
+	inner join content_ayat as a on a.one_day_content_id=mc.id
+	inner join content_sura as sura on a.sura_id=sura.id
+	where s.is_active = 'true'
+	group by s.tg_chat_id`
+	err := r.db.Select(&contentForMailing, query)
+	return contentForMailing, err
+}

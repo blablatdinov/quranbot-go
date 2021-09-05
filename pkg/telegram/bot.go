@@ -1,8 +1,9 @@
 package telegram
 
 import (
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"log"
+	"qbot"
 	"qbot/pkg/service"
 	"sync"
 )
@@ -46,61 +47,65 @@ func (b *Bot) Start() error {
 	return nil
 }
 
-func (b *Bot) CheckSubscriberStatus(chatId int64, deactivatedSubscribersChan chan int64, limit chan struct{}, wg *sync.WaitGroup) {
-	defer wg.Done()
-	limit <- struct{}{}
-	action := tgbotapi.NewChatAction(chatId, "typing")
-	_, err := b.bot.Send(action)
-	if err != nil {
-		if err.Error() == "Bad Request: chat not found" || err.Error() == "Forbidden: bot was blocked by the user" {
-			deactivatedSubscribersChan <- chatId
-		}
-	}
-	<-limit
-}
-
-func (b *Bot) SomeFunc(deactivatedSubscribersChan chan int64, quitFromCycle chan struct{}, deactivatedSubscriberIdsChan chan []int64) { // TODO: rename
-	var deactivatedSubscriberIds []int64
+func (b *Bot) ReadMessagesChan(quitFromReadLoop chan struct{}, messagesChan chan tgbotapi.Message, messageListChan chan []tgbotapi.Message) {
+	var messages []tgbotapi.Message
 	for {
 		select {
-		case deactivatedSubscriberId := <-deactivatedSubscribersChan:
-			deactivatedSubscriberIds = append(deactivatedSubscriberIds, deactivatedSubscriberId)
-		case <-quitFromCycle:
-			goto BREAKLOOP
+		case message := <-messagesChan:
+			messages = append(messages, message)
+		case <-quitFromReadLoop:
+			goto ENDLOOP
 		default:
 			continue
 		}
 	}
-BREAKLOOP:
-	deactivatedSubscriberIdsChan <- deactivatedSubscriberIds
+ENDLOOP:
+	messageListChan <- messages
 }
 
-func (b *Bot) CheckSubscribers() error {
-	subsribers, err := b.service.GetActiveSubscribers()
-	deactivatedSubscribersChan := make(chan int64)
-	deactivatedSubscribersIdsChan := make(chan []int64)
-	quitFromCycle := make(chan struct{}, 1)
+func (b *Bot) SendMorningContent() error {
+	content, err := b.service.GetMorningContentForTodayMailing()
+	messagesChan := make(chan tgbotapi.Message, len(content))
 	var wg sync.WaitGroup
-	limit := make(chan struct{}, 100)
 	if err != nil {
 		return err
 	}
-	go b.SomeFunc(deactivatedSubscribersChan, quitFromCycle, deactivatedSubscribersIdsChan)
-	for _, subsriber := range subsribers {
+	for _, elem := range content {
 		wg.Add(1)
-		go b.CheckSubscriberStatus(subsriber.ChatId, deactivatedSubscribersChan, limit, &wg)
+		chatId := elem.ChatId
+		content := elem.Content
+		go func(messagesChan chan tgbotapi.Message, wg *sync.WaitGroup) {
+			message, err := b.SendMessage(chatId, content)
+			if err != nil {
+				fmt.Printf("Error: %s", err.Error())
+				wg.Done()
+				return
+			}
+			messagesChan <- message
+			wg.Done()
+		}(messagesChan, &wg)
 	}
+	quitFromReadLoop := make(chan struct{})
+	messageListChan := make(chan []tgbotapi.Message, 1)
+	go b.ReadMessagesChan(quitFromReadLoop, messagesChan, messageListChan)
 	wg.Wait()
-	quitFromCycle <- struct{}{}
-	deactivatedSubscribersIds := <-deactivatedSubscribersIdsChan
-	err = b.service.DeactivateSubscribers(deactivatedSubscribersIds)
-	if err != nil {
-		if err.Error() == "len(chatIds) must be more 0" {
-			log.Println("Unsubscribed 0 users")
-			return nil
-		}
-		return err
+	quitFromReadLoop <- struct{}{}
+	messages := <-messageListChan
+	inactivatedSubscribers := difference(messages, content)
+	err = b.service.DeactivateSubscribers(inactivatedSubscribers)
+	return err
+}
+
+func difference(messages []tgbotapi.Message, contents []qbot.MailingContent) []int64 {
+	mb := make(map[int64]struct{}, len(messages))
+	for _, x := range messages {
+		mb[x.Chat.ID] = struct{}{}
 	}
-	log.Printf("Unsubscribed %d users\n", len(deactivatedSubscribersIds))
-	return nil
+	var diff []int64
+	for _, x := range contents {
+		if _, found := mb[x.ChatId]; !found {
+			diff = append(diff, x.ChatId)
+		}
+	}
+	return diff
 }

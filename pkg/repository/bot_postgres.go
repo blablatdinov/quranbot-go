@@ -118,7 +118,7 @@ func GenerateConditionForDeactivatingSubscribers(chatIds []int64) string {
 	result := "where "
 	var or string
 	for i, chatId := range chatIds {
-		if i == len(chatIds) - 1 {
+		if i == len(chatIds)-1 {
 			or = ""
 		} else {
 			or = " or "

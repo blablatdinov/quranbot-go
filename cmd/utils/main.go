@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
@@ -12,7 +14,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func main() {
+func initialize() (*tgbotapi.BotAPI, *sqlx.DB) {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("error loading env variables: %s", err.Error())
 	}
@@ -29,10 +31,22 @@ func main() {
 	if err != nil {
 		log.Println(err.Error())
 	}
+	return botApi, db
+}
+
+func main() {
+	botApi, db := initialize()
 	repos := repository.NewRepository(db)
 	services := service.NewService(repos)
 	bot := telegram.NewBot(botApi, services)
-	if err := bot.CheckSubscribers(); err != nil {
-		log.Fatal(err)
+	flag.Parse()
+	if flag.Args()[0] == "check" && flag.Args()[1] == "subscribers" {
+		if err := bot.CheckSubscribers(); err != nil {
+			log.Fatal(err)
+		}
+	} else if flag.Args()[0] == "send" && flag.Args()[1] == "content" {
+		if err := bot.SendMorningContent(); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
