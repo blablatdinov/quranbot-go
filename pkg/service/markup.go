@@ -2,7 +2,7 @@ package service
 
 import tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 
-func (s *BotService) GetDefaultKeyboard() tgbotapi.ReplyKeyboardMarkup {
+func GetDefaultKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	return tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("Подкасты"),

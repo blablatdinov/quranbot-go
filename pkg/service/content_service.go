@@ -65,6 +65,9 @@ func (s *ContentService) GetFavoriteAyats(chatId int64) (string, tgbotapi.Inline
 	if err != nil {
 		return "", tgbotapi.InlineKeyboardMarkup{}, err
 	}
+	if len(ayats) < 1 {
+		return "", tgbotapi.InlineKeyboardMarkup{}, errors.New("subscriber hasn't favorite ayats")
+	}
 	keyboard := s.getFavoriteAyatsInlineKeyboard(ayats, 0)
 	ayat := renderAyat(ayats[0])
 	return ayat, keyboard, nil
@@ -74,6 +77,9 @@ func (s *ContentService) GetFavoriteAyatsFromKeyboard(chatId int64, ayatId int) 
 	ayats, err := s.repo.GetFavoriteAyats(chatId)
 	if err != nil {
 		return "", tgbotapi.InlineKeyboardMarkup{}, err
+	}
+	if len(ayats) < 1 {
+		return "", tgbotapi.InlineKeyboardMarkup{}, errors.New("subscriber hasn't favorite ayats")
 	}
 	ayatIndex := getAyatIndex(ayatId, ayats)
 	keyboard := s.getFavoriteAyatsInlineKeyboard(ayats, ayatIndex)
@@ -377,31 +383,46 @@ func (s *ContentService) getFavoriteAyatsInlineKeyboard(ayats []qbot.Ayat, index
 		fmt.Sprintf(dataForFavorButtonTemplate, ayats[index].Id),
 	)
 	if index == 0 {
-		index = 1
-		keyboard = tgbotapi.NewInlineKeyboardMarkup(
-			tgbotapi.NewInlineKeyboardRow(
-				addToFavoriteButton,
-			),
-			tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData(
-					fmt.Sprintf("%s >", ayats[index].GetSuraAyatNum()),
-					fmt.Sprintf("getFavoriteAyat(%d)", ayats[index].Id),
+		if len(ayats) == 1 {
+			keyboard = tgbotapi.NewInlineKeyboardMarkup(
+				tgbotapi.NewInlineKeyboardRow(
+					addToFavoriteButton,
 				),
-			),
-		)
+			)
+		} else {
+			keyboard = tgbotapi.NewInlineKeyboardMarkup(
+				tgbotapi.NewInlineKeyboardRow(
+					addToFavoriteButton,
+				),
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData(
+						fmt.Sprintf("%s >", ayats[index].GetSuraAyatNum()),
+						fmt.Sprintf("getFavoriteAyat(%d)", ayats[index].Id),
+					),
+				),
+			)
+		}
 	} else if index == len(ayats)-1 {
 		index = index - 1
-		keyboard = tgbotapi.NewInlineKeyboardMarkup(
-			tgbotapi.NewInlineKeyboardRow(
-				addToFavoriteButton,
-			),
-			tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData(
-					fmt.Sprintf("< %s", ayats[index].GetSuraAyatNum()),
-					fmt.Sprintf("getFavoriteAyat(%d)", ayats[index].Id),
+		if len(ayats) == 1 {
+			keyboard = tgbotapi.NewInlineKeyboardMarkup(
+				tgbotapi.NewInlineKeyboardRow(
+					addToFavoriteButton,
 				),
-			),
-		)
+			)
+		} else {
+			keyboard = tgbotapi.NewInlineKeyboardMarkup(
+				tgbotapi.NewInlineKeyboardRow(
+					addToFavoriteButton,
+				),
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData(
+						fmt.Sprintf("< %s", ayats[index].GetSuraAyatNum()),
+						fmt.Sprintf("getFavoriteAyat(%d)", ayats[index].Id),
+					),
+				),
+			)
+		}
 	} else {
 		keyboard = tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(

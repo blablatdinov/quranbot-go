@@ -4,6 +4,7 @@ import (
 	"errors"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
+	"qbot/pkg/service"
 )
 
 func (b *Bot) handleMessage(message *tgbotapi.Message) error {
@@ -64,7 +65,13 @@ func (b Bot) getRandomPodcast(message *tgbotapi.Message) error {
 func (b Bot) getFavoriteAyats(message *tgbotapi.Message) error {
 	answer, keyboard, err := b.service.GetFavoriteAyats(message.Chat.ID)
 	if err != nil {
-		return err
+		if err.Error() == "subscriber hasn't favorite ayats" {
+			answer = "Вы не добавили аятов в избранное"
+			b.SendMessage(message.Chat.ID, answer)
+			return nil
+		} else {
+			return err
+		}
 	}
 	err = b.service.SetSubscriberState(message.Chat.ID, "see favorite")
 	if err != nil {
@@ -93,10 +100,10 @@ func (b Bot) searchAyatBySuraAyatNum(message *tgbotapi.Message) error {
 	msg.ReplyMarkup = keyboard
 	if err != nil && err.Error() == "sura not found" {
 		msg.Text = suraNotFoundText
-		msg.ReplyMarkup = b.service.GetDefaultKeyboard()
+		msg.ReplyMarkup = service.GetDefaultKeyboard()
 	} else if err != nil && err.Error() == "ayat not found" {
 		msg.Text = ayatNotFoundText
-		msg.ReplyMarkup = b.service.GetDefaultKeyboard()
+		msg.ReplyMarkup = service.GetDefaultKeyboard()
 	} else if err != nil {
 		return err
 	}

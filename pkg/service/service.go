@@ -8,7 +8,6 @@ import (
 
 type Bot interface {
 	CreateSubscriber(chatId int64) (string, bool)
-	GetDefaultKeyboard() tgbotapi.ReplyKeyboardMarkup
 	SetSubscriberState(chatId int64, step string) error
 	GetSubscriberState(chatId int64) (string, error)
 	GetAyatByMailingDay(mailingDay int) (string, error)
