@@ -145,7 +145,7 @@ func (s *ContentService) getAyatKeyboardFromAyatState(chatId int64, ayat qbot.Ay
 			),
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData(
-					nextAyat.GetSuraAyatNum(),
+					fmt.Sprintf("%s >", nextAyat.GetSuraAyatNum()),
 					fmt.Sprintf("getAyat(%d)", ayat.Id+1),
 				),
 			),
@@ -161,7 +161,7 @@ func (s *ContentService) getAyatKeyboardFromAyatState(chatId int64, ayat qbot.Ay
 			),
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData(
-					prevAyat.GetSuraAyatNum(),
+					fmt.Sprintf("< %s", prevAyat.GetSuraAyatNum()),
 					fmt.Sprintf("getAyat(%d)", ayat.Id-1),
 				),
 			),
@@ -181,11 +181,11 @@ func (s *ContentService) getAyatKeyboardFromAyatState(chatId int64, ayat qbot.Ay
 			),
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData(
-					prevAyat.GetSuraAyatNum(),
+					fmt.Sprintf("< %s", prevAyat.GetSuraAyatNum()),
 					fmt.Sprintf("getAyat(%d)", ayat.Id-1),
 				),
 				tgbotapi.NewInlineKeyboardButtonData(
-					nextAyat.GetSuraAyatNum(),
+					fmt.Sprintf("%s >", nextAyat.GetSuraAyatNum()),
 					fmt.Sprintf("getAyat(%d)", ayat.Id+1),
 				),
 			),
@@ -212,7 +212,7 @@ func (s *ContentService) getAdjacentAyatsKeyboard(chatId int64, ayatId int) (tgb
 			),
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData(
-					nextAyat.GetSuraAyatNum(),
+					fmt.Sprintf("%s >", nextAyat.GetSuraAyatNum()),
 					fmt.Sprintf("getAyat(%d)", nextAyat.Id),
 				),
 			),
@@ -225,7 +225,7 @@ func (s *ContentService) getAdjacentAyatsKeyboard(chatId int64, ayatId int) (tgb
 			),
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData(
-					prevAyat.GetSuraAyatNum(),
+					fmt.Sprintf("< %s", prevAyat.GetSuraAyatNum()),
 					fmt.Sprintf("getAyat(%d)", ayats[len(ayats)-1].Id),
 				),
 			),
@@ -239,11 +239,11 @@ func (s *ContentService) getAdjacentAyatsKeyboard(chatId int64, ayatId int) (tgb
 			),
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData(
-					prevAyat.GetSuraAyatNum(),
+					fmt.Sprintf("< %s", prevAyat.GetSuraAyatNum()),
 					fmt.Sprintf("getAyat(%d)", prevAyat.Id),
 				),
 				tgbotapi.NewInlineKeyboardButtonData(
-					nextAyat.GetSuraAyatNum(),
+					fmt.Sprintf("%s >", nextAyat.GetSuraAyatNum()),
 					fmt.Sprintf("getAyat(%d)", nextAyat.Id),
 				),
 			),
@@ -265,7 +265,7 @@ func (s *ContentService) getAyatKeyboardFromFavoriteState(chatId int64, ayat qbo
 			),
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData(
-					nextAyat.GetSuraAyatNum(),
+					fmt.Sprintf("%s >", nextAyat.GetSuraAyatNum()),
 					fmt.Sprintf("getAyat(%d)", ayat.Id+1),
 				),
 			),
@@ -281,7 +281,7 @@ func (s *ContentService) getAyatKeyboardFromFavoriteState(chatId int64, ayat qbo
 			),
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData(
-					prevAyat.GetSuraAyatNum(),
+					fmt.Sprintf("< %s", prevAyat.GetSuraAyatNum()),
 					fmt.Sprintf("getAyat(%d)", ayat.Id-1),
 				),
 			),
@@ -301,11 +301,11 @@ func (s *ContentService) getAyatKeyboardFromFavoriteState(chatId int64, ayat qbo
 			),
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData(
-					prevAyat.GetSuraAyatNum(),
+					fmt.Sprintf("< %s", prevAyat.GetSuraAyatNum()),
 					fmt.Sprintf("getAyat(%d)", ayat.Id-1),
 				),
 				tgbotapi.NewInlineKeyboardButtonData(
-					nextAyat.GetSuraAyatNum(),
+					fmt.Sprintf("%s >", nextAyat.GetSuraAyatNum()),
 					fmt.Sprintf("getAyat(%d)", ayat.Id+1),
 				),
 			),
@@ -384,7 +384,7 @@ func (s *ContentService) getFavoriteAyatsInlineKeyboard(ayats []qbot.Ayat, index
 			),
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData(
-					ayats[index].GetSuraAyatNum(),
+					fmt.Sprintf("%s >", ayats[index].GetSuraAyatNum()),
 					fmt.Sprintf("getFavoriteAyat(%d)", ayats[index].Id),
 				),
 			),
@@ -397,7 +397,7 @@ func (s *ContentService) getFavoriteAyatsInlineKeyboard(ayats []qbot.Ayat, index
 			),
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData(
-					ayats[index].GetSuraAyatNum(),
+					fmt.Sprintf("< %s", ayats[index].GetSuraAyatNum()),
 					fmt.Sprintf("getFavoriteAyat(%d)", ayats[index].Id),
 				),
 			),
@@ -409,11 +409,11 @@ func (s *ContentService) getFavoriteAyatsInlineKeyboard(ayats []qbot.Ayat, index
 			),
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData(
-					ayats[index-1].GetSuraAyatNum(),
+					fmt.Sprintf("< %s", ayats[index-1].GetSuraAyatNum()),
 					fmt.Sprintf("getFavoriteAyat(%d)", ayats[index-1].Id),
 				),
 				tgbotapi.NewInlineKeyboardButtonData(
-					ayats[index+1].GetSuraAyatNum(),
+					fmt.Sprintf("%s >", ayats[index+1].GetSuraAyatNum()),
 					fmt.Sprintf("getFavoriteAyat(%d)", ayats[index+1].Id),
 				),
 			),
