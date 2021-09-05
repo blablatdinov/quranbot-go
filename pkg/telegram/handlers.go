@@ -9,6 +9,7 @@ import (
 const commandStart = "start"
 
 func (b *Bot) handleCommand(message *tgbotapi.Message) error {
+	log.Printf("Command: %s\n", message.Command())
 	switch message.Command() {
 	case commandStart:
 		return b.handleStartCommand(message)

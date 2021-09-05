@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/go-co-op/gocron"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"log"
@@ -9,6 +10,7 @@ import (
 	"qbot/pkg/repository"
 	"qbot/pkg/service"
 	"qbot/pkg/telegram"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	_ "github.com/lib/pq"
@@ -38,7 +40,7 @@ func main() {
 	botApi, db := initialize()
 	repos := repository.NewRepository(db)
 	services := service.NewService(repos)
-	bot := telegram.NewBot(botApi, services)
+	bot := telegram.NewBot(botApi, services, gocron.NewScheduler(time.UTC))
 	flag.Parse()
 	if flag.Args()[0] == "check" && flag.Args()[1] == "subscribers" {
 		if err := bot.CheckSubscribers(); err != nil {

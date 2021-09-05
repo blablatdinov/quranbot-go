@@ -9,6 +9,7 @@ import (
 func (b *Bot) handleMessage(message *tgbotapi.Message) error {
 	log.Printf("handleMessage: Message \"%s\" from %d\n", message.Text, message.Chat.ID)
 	patterns := map[string]interface{}{
+		`/start`:        b.handleStartCommand,
 		`\d.?:.?\d`:     b.searchAyatBySuraAyatNum,
 		`(И|и)збранное`: b.getFavoriteAyats,
 		`(П|п)одкасты`:  b.getRandomPodcast,

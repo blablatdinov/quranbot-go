@@ -1,8 +1,11 @@
 package telegram
 
 import (
+	"errors"
 	"fmt"
+	"github.com/go-co-op/gocron"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"log"
 	"qbot"
 	"qbot/pkg/service"
 	"sync"
@@ -11,13 +14,30 @@ import (
 type Bot struct {
 	bot     *tgbotapi.BotAPI
 	service *service.Service
+	goCron  *gocron.Scheduler
 }
 
-func NewBot(bot *tgbotapi.BotAPI, service *service.Service) *Bot {
+func NewBot(bot *tgbotapi.BotAPI, service *service.Service, goCron *gocron.Scheduler) *Bot {
 	return &Bot{
 		bot:     bot,
 		service: service,
+		goCron:  goCron,
 	}
+}
+
+func (b *Bot) StartJobs() error {
+	jobs := map[string]interface{}{
+		"0 7 * * *": b.SendMorningContent,
+	}
+	for cronTime, job := range jobs {
+		_, err := b.goCron.Cron(cronTime).Do(job.(func() error))
+		if err != nil {
+			return err
+		}
+	}
+	b.goCron.StartAsync()
+	log.Printf("Cron started with jobs: %s\n", jobs)
+	return nil
 }
 
 func (b *Bot) Start() error {
@@ -30,11 +50,16 @@ func (b *Bot) Start() error {
 	}
 
 	for update := range updates {
+		if update.Message == nil && update.CallbackQuery == nil {
+			b.handleError(0, errors.New("unknown behaviour"))
+			continue
+		}
 		if update.CallbackQuery != nil {
 			b.handleQuery(update.CallbackQuery)
 			continue
 		}
 		if update.Message.IsCommand() {
+			log.Printf("Take command\n")
 			if err := b.handleCommand(update.Message); err != nil {
 				b.handleError(update.Message.Chat.ID, err)
 			}
