@@ -61,11 +61,20 @@ func (s *PrayerService) getKeyboardWithPrayers(chatId int64, prayers []qbot.Pray
 	}
 	buttons := make([]tgbotapi.InlineKeyboardButton, 0, 5)
 	for _, prayerAtUser := range prayersAtUser {
+		var buttonEmoji string
+		var buttonData string
+		if prayerAtUser.IsRead {
+			buttonEmoji = "✅"
+			buttonData = fmt.Sprintf("setPrayerStatusToUnread(%d)", prayerAtUser.Id)
+		} else {
+			buttonEmoji = "❌"
+			buttonData = fmt.Sprintf("setPrayerStatusToRead(%d)", prayerAtUser.Id)
+		}
 		buttons = append(
 			buttons,
 			tgbotapi.NewInlineKeyboardButtonData(
-				fmt.Sprintf("%d", prayerAtUser.Id),
-				"asdf",
+				buttonEmoji,
+				buttonData,
 			),
 		)
 	}
