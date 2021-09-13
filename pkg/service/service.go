@@ -29,7 +29,7 @@ type Content interface {
 }
 
 type Prayer interface {
-	GetPrayer(chatId int64) (string, error)
+	GetPrayer(chatId int64) (string, tgbotapi.InlineKeyboardMarkup, error)
 }
 
 type Service struct {

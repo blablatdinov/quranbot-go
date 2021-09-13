@@ -29,7 +29,7 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) error {
 }
 
 func (b Bot) getPrayerTimes(message *tgbotapi.Message) error {
-	answer, err := b.service.GetPrayer(message.Chat.ID)
+	answer, _, err := b.service.GetPrayer(message.Chat.ID)
 	if err != nil {
 		if err.Error() == "subscriber hasn't city" {
 			answer = "subscriber hasn't city"

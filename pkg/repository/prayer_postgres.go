@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"qbot"
 	"time"
@@ -34,6 +35,7 @@ func (r *PrayerPostgres) GetPrayer(chatId int64, date time.Time) ([]qbot.Prayer,
 	var prayers []qbot.Prayer
 	query := `
 		select
+			p.id,
 			city.name as city_name,
 			day.date,
 			p.time
@@ -44,4 +46,46 @@ func (r *PrayerPostgres) GetPrayer(chatId int64, date time.Time) ([]qbot.Prayer,
 		where sub.tg_chat_id = $1 and day.date = $2`
 	err := r.db.Select(&prayers, query, chatId, date.Format("01-01-2006"))
 	return prayers, err
+}
+
+func (r *PrayerPostgres) CreatePrayerAtUserGroup() (int, error) {
+	var prayerAtUserGroupId int
+	query := `insert into prayer_prayeratusergroup DEFAULT VALUES returning id`
+	row := r.db.QueryRow(query)
+	if err := row.Scan(&prayerAtUserGroupId); err != nil {
+		return 0, err
+	}
+	return prayerAtUserGroupId, nil
+}
+
+func (r *PrayerPostgres) GeneratePrayerForUser(chatId int64, prayers []qbot.Prayer) ([]qbot.PrayerAtUser, error) {
+	prayerAtUserGroupId, err := r.CreatePrayerAtUserGroup()
+	if err != nil {
+		return []qbot.PrayerAtUser{}, err
+	}
+	var subscriberId int
+	query := "select id from bot_init_subscriber where tg_chat_id = $1"
+	if err := r.db.Get(&subscriberId, query, chatId); err != nil {
+		return []qbot.PrayerAtUser{}, err
+	}
+
+	query = `insert into prayer_prayeratuser
+	(is_read, prayer_id, prayer_group_id, subscriber_id)
+	values` +
+		fmt.Sprintf("('f', %d, %d, %d),", prayers[0].Id, prayerAtUserGroupId, subscriberId) +
+		fmt.Sprintf("('f', %d, %d, %d),", prayers[2].Id, prayerAtUserGroupId, subscriberId) +
+		fmt.Sprintf("('f', %d, %d, %d),", prayers[3].Id, prayerAtUserGroupId, subscriberId) +
+		fmt.Sprintf("('f', %d, %d, %d),", prayers[4].Id, prayerAtUserGroupId, subscriberId) +
+		fmt.Sprintf("('f', %d, %d, %d)", prayers[5].Id, prayerAtUserGroupId, subscriberId)
+	fmt.Println(query)
+	_, err = r.db.Exec(query)
+	if err != nil {
+		return []qbot.PrayerAtUser{}, err
+	}
+	var prayersAtUser []qbot.PrayerAtUser
+	query = "select id, is_read from prayer_prayeratuser where prayer_group_id = $1"
+	if err = r.db.Select(&prayersAtUser, query, prayerAtUserGroupId); err != nil {
+		return []qbot.PrayerAtUser{}, err
+	}
+	return prayersAtUser, nil
 }

@@ -3,6 +3,9 @@ package service
 import (
 	"errors"
 	"fmt"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"log"
+	"qbot"
 	"qbot/pkg/repository"
 	"time"
 )
@@ -15,17 +18,17 @@ func NewPrayerService(repo repository.Prayer) *PrayerService {
 	return &PrayerService{repo}
 }
 
-func (s *PrayerService) GetPrayer(chatId int64) (string, error) {
+func (s *PrayerService) GetPrayer(chatId int64) (string, tgbotapi.InlineKeyboardMarkup, error) {
 	subscriberHasCity, err := s.repo.SubscriberHasCity(chatId)
 	if err != nil {
-		return "", err
+		return "", tgbotapi.InlineKeyboardMarkup{}, err
 	}
 	if !subscriberHasCity {
-		return "", errors.New("subscriber hasn't city")
+		return "", tgbotapi.InlineKeyboardMarkup{}, errors.New("subscriber hasn't city")
 	}
 	prayers, err := s.repo.GetPrayer(chatId, time.Now())
 	if len(prayers) == 0 {
-		return "", errors.New("null prayers")
+		return "", tgbotapi.InlineKeyboardMarkup{}, errors.New("null prayers")
 	}
 	messageTemplate := "Время намаза для города: %s (%s)\n\n" +
 		"Иртәнге: %s\n" +
@@ -45,5 +48,18 @@ func (s *PrayerService) GetPrayer(chatId int64) (string, error) {
 		prayers[4].Time.Format("15:04"),
 		prayers[5].Time.Format("15:04"),
 	)
-	return message, err
+	keyboard, err := s.getKeyboardWithPrayers(chatId, prayers)
+	if err != nil {
+		return "", tgbotapi.InlineKeyboardMarkup{}, err
+	}
+	return message, keyboard, err
+}
+
+func (s *PrayerService) getKeyboardWithPrayers(chatId int64, prayers []qbot.Prayer) (tgbotapi.InlineKeyboardMarkup, error) {
+	prayersAtUser, err := s.repo.GeneratePrayerForUser(chatId, prayers)
+	if err != nil {
+		return tgbotapi.InlineKeyboardMarkup{}, err
+	}
+	log.Println(prayersAtUser)
+	return tgbotapi.InlineKeyboardMarkup{}, nil
 }

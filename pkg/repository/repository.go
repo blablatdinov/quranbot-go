@@ -32,6 +32,7 @@ type Content interface {
 type Prayer interface {
 	GetPrayer(chatId int64, date time.Time) ([]qbot.Prayer, error)
 	SubscriberHasCity(chatId int64) (bool, error)
+	GeneratePrayerForUser(chatId int64, prayers []qbot.Prayer) ([]qbot.PrayerAtUser, error)
 }
 
 type Repository struct {
