@@ -31,6 +31,8 @@ type Content interface {
 type Prayer interface {
 	GetPrayer(chatId int64) (string, tgbotapi.InlineKeyboardMarkup, error)
 	ChangePrayerStatus(prayerAtUserId int, status bool) (tgbotapi.InlineKeyboardMarkup, error)
+	GetCityByName(cityName string) (qbot.City, error)
+	ChangeCity(chatId int64, cityId int) error
 }
 
 type Service struct {

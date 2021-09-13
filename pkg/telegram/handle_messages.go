@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"errors"
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 	"qbot/pkg/service"
@@ -15,6 +16,7 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) error {
 		`(И|и)збранное`: b.getFavoriteAyats,
 		`(П|п)одкасты`:  b.getRandomPodcast,
 		`Время намаза`:  b.getPrayerTimes,
+		`.+`:            b.changeCity,
 	}
 	for pattern, handler := range patterns {
 		if path(pattern, message.Text) {
@@ -26,6 +28,20 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) error {
 		}
 	}
 	return errors.New("unknow pattern")
+}
+
+func (b Bot) changeCity(message *tgbotapi.Message) error {
+	city, err := b.service.GetCityByName(message.Text)
+	if err != nil {
+		return err
+	}
+	if city.Id == 0 {
+		return errors.New("city not found")
+	}
+	err = b.service.ChangeCity(message.Chat.ID, city.Id)
+	msg := tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("Вам будет приходить время намаза для г. %s", city.Name))
+	b.bot.Send(msg)
+	return err
 }
 
 func (b Bot) getPrayerTimes(message *tgbotapi.Message) error {

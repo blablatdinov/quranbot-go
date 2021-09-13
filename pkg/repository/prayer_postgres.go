@@ -148,3 +148,16 @@ func (r *PrayerPostgres) GetPrayersAtUserByOnePrayerId(prayersAtUserId int) ([]q
 	}
 	return prayers, nil
 }
+
+func (r *PrayerPostgres) GetCityByName(cityName string) (qbot.City, error) {
+	var city qbot.City
+	query := "select id, name from prayer_city where name = $1"
+	err := r.db.Get(&city, query, cityName)
+	return city, err
+}
+
+func (r *PrayerPostgres) ChangeCity(chatId int64, cityId int) error {
+	query := "update bot_init_subscriber set city_id = $1 where tg_chat_id = $2"
+	_, err := r.db.Exec(query, cityId, chatId)
+	return err
+}

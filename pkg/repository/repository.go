@@ -37,6 +37,8 @@ type Prayer interface {
 	ChangePrayerStatus(prayerAtUserId int, status bool) error
 	GetPrayersAtUserByGroupId(prayersAtUserGroupId int) ([]qbot.PrayerAtUser, error)
 	GetPrayersAtUserByOnePrayerId(prayersAtUserId int) ([]qbot.PrayerAtUser, error)
+	GetCityByName(cityName string) (qbot.City, error)
+	ChangeCity(chatId int64, cityId int) error
 }
 
 type Repository struct {

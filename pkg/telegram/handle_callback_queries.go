@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"errors"
-	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"strconv"
 )
@@ -17,7 +16,6 @@ func (b *Bot) handleQuery(callbackQuery *tgbotapi.CallbackQuery) error {
 		`setPrayerStatusToRead\(\d+\)`:   b.setPrayerStatusToRead,
 	}
 	for pattern, handler := range patterns {
-		fmt.Println(callbackQuery.Data)
 		if path(pattern, callbackQuery.Data) {
 			err := handler.(func(callbackQuery *tgbotapi.CallbackQuery) error)(callbackQuery)
 			if err != nil {

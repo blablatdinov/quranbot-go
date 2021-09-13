@@ -98,3 +98,16 @@ func (s *PrayerService) ChangePrayerStatus(prayerAtUserId int, status bool) (tgb
 	keyboard := getPrayerAtUserKeyboard(prayersAtUser)
 	return keyboard, err
 }
+
+func (s *PrayerService) GetCityByName(cityName string) (qbot.City, error) {
+	city, err := s.repo.GetCityByName(cityName)
+	if err != nil {
+		return qbot.City{}, err
+	}
+	return city, nil
+}
+
+func (s *PrayerService) ChangeCity(chatId int64, cityId int) error {
+	err := s.repo.ChangeCity(chatId, cityId)
+	return err
+}
