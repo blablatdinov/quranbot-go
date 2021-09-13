@@ -2,18 +2,22 @@ package telegram
 
 import (
 	"errors"
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"strconv"
 )
 
 func (b *Bot) handleQuery(callbackQuery *tgbotapi.CallbackQuery) error {
 	patterns := map[string]interface{}{
-		`getFavoriteAyat\(\d+\)`:    b.swipeToFavoriteAyat,
-		`getAyat\(\d+\)`:            b.swipeToAyat,
-		`addToFavorite\(\d+\)`:      b.addToFavorite,
-		`removeFromFavorite\(\d+\)`: b.removeFromFavorite,
+		`getFavoriteAyat\(\d+\)`:         b.swipeToFavoriteAyat,
+		`getAyat\(\d+\)`:                 b.swipeToAyat,
+		`addToFavorite\(\d+\)`:           b.addToFavorite,
+		`removeFromFavorite\(\d+\)`:      b.removeFromFavorite,
+		`setPrayerStatusToUnread\(\d+\)`: b.setPrayerStatusToUnread,
+		`setPrayerStatusToRead\(\d+\)`:   b.setPrayerStatusToRead,
 	}
 	for pattern, handler := range patterns {
+		fmt.Println(callbackQuery.Data)
 		if path(pattern, callbackQuery.Data) {
 			err := handler.(func(callbackQuery *tgbotapi.CallbackQuery) error)(callbackQuery)
 			if err != nil {
@@ -23,6 +27,34 @@ func (b *Bot) handleQuery(callbackQuery *tgbotapi.CallbackQuery) error {
 		}
 	}
 	return errors.New("unknow pattern")
+}
+
+func (b *Bot) setPrayerStatusToRead(callbackQuery *tgbotapi.CallbackQuery) error {
+	prayerAtUserId, err := strconv.Atoi(callbackQuery.Data[22 : len(callbackQuery.Data)-1])
+	if err != nil {
+		return err
+	}
+	keyboard, err := b.service.ChangePrayerStatus(prayerAtUserId, true)
+	if err != nil {
+		return err
+	}
+	edit := tgbotapi.NewEditMessageReplyMarkup(callbackQuery.Message.Chat.ID, callbackQuery.Message.MessageID, keyboard)
+	b.bot.Send(edit)
+	return nil
+}
+
+func (b *Bot) setPrayerStatusToUnread(callbackQuery *tgbotapi.CallbackQuery) error {
+	prayerAtUserId, err := strconv.Atoi(callbackQuery.Data[24 : len(callbackQuery.Data)-1])
+	if err != nil {
+		return err
+	}
+	keyboard, err := b.service.ChangePrayerStatus(prayerAtUserId, false)
+	if err != nil {
+		return err
+	}
+	edit := tgbotapi.NewEditMessageReplyMarkup(callbackQuery.Message.Chat.ID, callbackQuery.Message.MessageID, keyboard)
+	b.bot.Send(edit)
+	return nil
 }
 
 func (b *Bot) swipeToFavoriteAyat(callbackQuery *tgbotapi.CallbackQuery) error {

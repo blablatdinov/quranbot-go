@@ -74,7 +74,9 @@ func (b *Bot) Start() error {
 			continue
 		}
 		if update.CallbackQuery != nil {
-			b.handleQuery(update.CallbackQuery)
+			if err := b.handleQuery(update.CallbackQuery); err != nil {
+				b.handleError(update.Message.Chat.ID, err)
+			}
 			continue
 		}
 		if update.Message.IsCommand() {

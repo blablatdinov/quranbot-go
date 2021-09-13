@@ -118,3 +118,33 @@ func (r *PrayerPostgres) GetOrCreatePrayerForUser(chatId int64, prayers []qbot.P
 	}
 	return prayersAtUser, nil
 }
+
+func (r *PrayerPostgres) ChangePrayerStatus(prayerAtUserId int, status bool) error {
+	query := "update prayer_prayeratuser set is_read = $1 where id = $2"
+	_, err := r.db.Exec(query, status, prayerAtUserId)
+	return err
+}
+
+func (r *PrayerPostgres) GetPrayersAtUserByGroupId(prayersAtUserGroupId int) ([]qbot.PrayerAtUser, error) {
+	var prayers []qbot.PrayerAtUser
+	query := "select id, is_read from prayer_prayeratuser where prayer_group_id = $1"
+	if err := r.db.Select(&prayers, query, prayersAtUserGroupId); err != nil {
+		return []qbot.PrayerAtUser{}, err
+	}
+	return prayers, nil
+}
+
+func (r *PrayerPostgres) GetPrayersAtUserByOnePrayerId(prayersAtUserId int) ([]qbot.PrayerAtUser, error) {
+	var prayers []qbot.PrayerAtUser
+	query := `
+	select
+		p.id,
+		is_read
+	from prayer_prayeratuser as p
+         inner join prayer_prayeratusergroup pp on p.prayer_group_id = pp.id
+	where pp.id = (select prayer_group_id from prayer_prayeratuser where id=$1)`
+	if err := r.db.Select(&prayers, query, prayersAtUserId); err != nil {
+		return []qbot.PrayerAtUser{}, err
+	}
+	return prayers, nil
+}

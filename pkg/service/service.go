@@ -30,6 +30,7 @@ type Content interface {
 
 type Prayer interface {
 	GetPrayer(chatId int64) (string, tgbotapi.InlineKeyboardMarkup, error)
+	ChangePrayerStatus(prayerAtUserId int, status bool) (tgbotapi.InlineKeyboardMarkup, error)
 }
 
 type Service struct {

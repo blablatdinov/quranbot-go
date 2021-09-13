@@ -54,13 +54,9 @@ func (s *PrayerService) GetPrayer(chatId int64) (string, tgbotapi.InlineKeyboard
 	return message, keyboard, err
 }
 
-func (s *PrayerService) getKeyboardWithPrayers(chatId int64, prayers []qbot.Prayer) (tgbotapi.InlineKeyboardMarkup, error) {
-	prayersAtUser, err := s.repo.GetOrCreatePrayerForUser(chatId, prayers)
-	if err != nil {
-		return tgbotapi.InlineKeyboardMarkup{}, err
-	}
+func getPrayerAtUserKeyboard(prayers []qbot.PrayerAtUser) tgbotapi.InlineKeyboardMarkup {
 	buttons := make([]tgbotapi.InlineKeyboardButton, 0, 5)
-	for _, prayerAtUser := range prayersAtUser {
+	for _, prayerAtUser := range prayers {
 		var buttonEmoji string
 		var buttonData string
 		if prayerAtUser.IsRead {
@@ -79,5 +75,26 @@ func (s *PrayerService) getKeyboardWithPrayers(chatId int64, prayers []qbot.Pray
 		)
 	}
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(buttons)
-	return keyboard, nil
+	return keyboard
+}
+
+func (s *PrayerService) getKeyboardWithPrayers(chatId int64, prayers []qbot.Prayer) (tgbotapi.InlineKeyboardMarkup, error) {
+	prayersAtUser, err := s.repo.GetOrCreatePrayerForUser(chatId, prayers)
+	if err != nil {
+		return tgbotapi.InlineKeyboardMarkup{}, err
+	}
+	return getPrayerAtUserKeyboard(prayersAtUser), nil
+}
+
+func (s *PrayerService) ChangePrayerStatus(prayerAtUserId int, status bool) (tgbotapi.InlineKeyboardMarkup, error) {
+	err := s.repo.ChangePrayerStatus(prayerAtUserId, status)
+	if err != nil {
+		return tgbotapi.InlineKeyboardMarkup{}, err
+	}
+	prayersAtUser, err := s.repo.GetPrayersAtUserByOnePrayerId(prayerAtUserId)
+	if err != nil {
+		return tgbotapi.InlineKeyboardMarkup{}, err
+	}
+	keyboard := getPrayerAtUserKeyboard(prayersAtUser)
+	return keyboard, err
 }

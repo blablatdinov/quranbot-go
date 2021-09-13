@@ -34,6 +34,9 @@ type Prayer interface {
 	SubscriberHasCity(chatId int64) (bool, error)
 	GeneratePrayerForUser(chatId int64, prayers []qbot.Prayer) ([]qbot.PrayerAtUser, error)
 	GetOrCreatePrayerForUser(chatId int64, prayers []qbot.Prayer) ([]qbot.PrayerAtUser, error)
+	ChangePrayerStatus(prayerAtUserId int, status bool) error
+	GetPrayersAtUserByGroupId(prayersAtUserGroupId int) ([]qbot.PrayerAtUser, error)
+	GetPrayersAtUserByOnePrayerId(prayersAtUserId int) ([]qbot.PrayerAtUser, error)
 }
 
 type Repository struct {
