@@ -77,7 +77,6 @@ func (r *PrayerPostgres) GeneratePrayerForUser(chatId int64, prayers []qbot.Pray
 		fmt.Sprintf("('f', %d, %d, %d),", prayers[3].Id, prayerAtUserGroupId, subscriberId) +
 		fmt.Sprintf("('f', %d, %d, %d),", prayers[4].Id, prayerAtUserGroupId, subscriberId) +
 		fmt.Sprintf("('f', %d, %d, %d)", prayers[5].Id, prayerAtUserGroupId, subscriberId)
-	fmt.Println(query)
 	_, err = r.db.Exec(query)
 	if err != nil {
 		return []qbot.PrayerAtUser{}, err
@@ -86,6 +85,36 @@ func (r *PrayerPostgres) GeneratePrayerForUser(chatId int64, prayers []qbot.Pray
 	query = "select id, is_read from prayer_prayeratuser where prayer_group_id = $1"
 	if err = r.db.Select(&prayersAtUser, query, prayerAtUserGroupId); err != nil {
 		return []qbot.PrayerAtUser{}, err
+	}
+	return prayersAtUser, nil
+}
+
+func (r *PrayerPostgres) GetPrayerForUser(chatId int64, prayers []qbot.Prayer) ([]qbot.PrayerAtUser, error) {
+	var prayersAtUser []qbot.PrayerAtUser
+	query := `
+	select 
+		pp.id, 
+		is_read 
+	from prayer_prayeratuser as pp
+	inner join bot_init_subscriber bis on bis.id = pp.subscriber_id
+	where bis.tg_chat_id = $1 and (pp.prayer_id = $2 or pp.prayer_id = $3 or pp.prayer_id = $4 or pp.prayer_id = $5 or pp.prayer_id = $6)`
+	if err := r.db.Select(&prayersAtUser, query, chatId, prayers[0].Id, prayers[2].Id, prayers[3].Id, prayers[4].Id, prayers[5].Id); err != nil {
+		return []qbot.PrayerAtUser{}, err
+	}
+	return prayersAtUser, nil
+}
+
+func (r *PrayerPostgres) GetOrCreatePrayerForUser(chatId int64, prayers []qbot.Prayer) ([]qbot.PrayerAtUser, error) {
+	prayersAtUser, err := r.GetPrayerForUser(chatId, prayers)
+	if err != nil {
+		return []qbot.PrayerAtUser{}, err
+	}
+	if len(prayersAtUser) == 0 {
+		prayersAtUser, err = r.GeneratePrayerForUser(chatId, prayers)
+		if err != nil {
+			return []qbot.PrayerAtUser{}, err
+		}
+		return prayersAtUser, nil
 	}
 	return prayersAtUser, nil
 }

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"log"
 	"qbot"
 	"qbot/pkg/repository"
 	"time"
@@ -56,10 +55,20 @@ func (s *PrayerService) GetPrayer(chatId int64) (string, tgbotapi.InlineKeyboard
 }
 
 func (s *PrayerService) getKeyboardWithPrayers(chatId int64, prayers []qbot.Prayer) (tgbotapi.InlineKeyboardMarkup, error) {
-	prayersAtUser, err := s.repo.GeneratePrayerForUser(chatId, prayers)
+	prayersAtUser, err := s.repo.GetOrCreatePrayerForUser(chatId, prayers)
 	if err != nil {
 		return tgbotapi.InlineKeyboardMarkup{}, err
 	}
-	log.Println(prayersAtUser)
-	return tgbotapi.InlineKeyboardMarkup{}, nil
+	buttons := make([]tgbotapi.InlineKeyboardButton, 0, 5)
+	for _, prayerAtUser := range prayersAtUser {
+		buttons = append(
+			buttons,
+			tgbotapi.NewInlineKeyboardButtonData(
+				fmt.Sprintf("%d", prayerAtUser.Id),
+				"asdf",
+			),
+		)
+	}
+	keyboard := tgbotapi.NewInlineKeyboardMarkup(buttons)
+	return keyboard, nil
 }
