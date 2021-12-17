@@ -4,6 +4,9 @@ build:
 build_utils:
 	go build -o ./bin/qbot_utils cmd/utils/main.go
 
+build_utils_linux:
+	GOOS=linux GOARCH=amd64 go build -o ./bin/qbot_utils_linux cmd/utils/main.go
+
 build_linux:
 	GOOS=linux GOARCH=amd64 go build -o ./bin/qbot_linux cmd/bot/main.go
 
