@@ -109,15 +109,10 @@ ENDLOOP:
 	messageListChan <- messages
 }
 
-func (b *Bot) SendMorningContent() error {
-	log.Println("Send morning content task started...")
-	content, err := b.service.GetMorningContentForTodayMailing()
-	log.Println(len(content))
+// MassMailing функция для массовой рассылки
+func (b *Bot) MassMailing(content []qbot.Answer) ([]int64, error) {
 	messagesChan := make(chan tgbotapi.Message, len(content))
 	var wg sync.WaitGroup
-	if err != nil {
-		return err
-	}
 	for _, elem := range content {
 		wg.Add(1)
 		chatId := elem.ChatId
@@ -138,22 +133,51 @@ func (b *Bot) SendMorningContent() error {
 	go b.ReadMessagesChan(quitFromReadLoop, messagesChan, messageListChan)
 	wg.Wait()
 	quitFromReadLoop <- struct{}{}
-	<-messageListChan
+	sendedMessages := <-messageListChan
+	var sendedToChatIds []int64
+	for _, c := range sendedMessages {
+		sendedToChatIds = append(sendedToChatIds, c.Chat.ID)
+	}
+	if err := b.service.DeactivateSubscribers(difference(sendedMessages, content)); err != nil {
+		return []int64{}, err
+	}
+	return sendedToChatIds, nil
+}
+
+// SendMorningContent рассылка аятов
+// каждое утро в 7:00
+func (b *Bot) SendMorningContent() error {
+	log.Println("Send morning content task started...")
+	content, err := b.service.GetMorningContentForTodayMailing()
+	log.Println(len(content))
+	chatIdsForUpdateDay, err := b.MassMailing([]qbot.Answer{})
 	if err != nil {
 		return err
 	}
-	var chatIdsForUpdateDay []int64
-	for _, c := range content {
-		chatIdsForUpdateDay = append(chatIdsForUpdateDay, c.ChatId)
-	}
 	err = b.service.UpdateDaysForSubscribers(chatIdsForUpdateDay)
 	if err != nil {
-		log.Println(err.Error())
+		return err
 	}
 	return err
 }
 
-func difference(messages []tgbotapi.Message, contents []qbot.MailingContent) []int64 {
+// sendPrayerTimes Рассылка времени намаза для след. дня
+func (b *Bot) sendPrayerTimes() error {
+	log.Println("Send prayer times task started...")
+	prayerTimesAtUser, err := b.service.GetPrayersForMailing()
+	if err != nil {
+		return err
+	}
+	if _, err = b.MassMailing(prayerTimesAtUser); err != nil {
+		return err
+	}
+	return nil
+}
+
+// difference Найти разницу в двух массивах по ChatId
+// Кейс: произошла рассылка, некоторые подписчики заблокировали бота,
+// чтобы найти тех, кто отписался находим разницу между тем, что должно было отправиться и что фактически отправилось
+func difference(messages []tgbotapi.Message, contents []qbot.Answer) []int64 {
 	mb := make(map[int64]struct{}, len(messages))
 	for _, x := range messages {
 		mb[x.Chat.ID] = struct{}{}

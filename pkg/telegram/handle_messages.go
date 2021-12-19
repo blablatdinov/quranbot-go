@@ -6,6 +6,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 	"qbot/pkg/service"
+	"time"
 )
 
 func (b *Bot) handleMessage(message *tgbotapi.Message) error {
@@ -44,8 +45,9 @@ func (b Bot) changeCity(message *tgbotapi.Message) error {
 	return err
 }
 
+// getPrayerTimes получить время намазов для пользователя
 func (b Bot) getPrayerTimes(message *tgbotapi.Message) error {
-	answer, keyboard, err := b.service.GetPrayer(message.Chat.ID)
+	answer, keyboard, err := b.service.GetPrayer(message.Chat.ID, time.Now())
 	if err != nil {
 		if err.Error() == "subscriber hasn't city" {
 			answer = "subscriber hasn't city"

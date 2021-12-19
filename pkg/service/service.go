@@ -4,6 +4,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"qbot"
 	"qbot/pkg/repository"
+	"time"
 )
 
 type Bot interface {
@@ -29,10 +30,11 @@ type Content interface {
 }
 
 type Prayer interface {
-	GetPrayer(chatId int64) (string, tgbotapi.InlineKeyboardMarkup, error)
+	GetPrayer(chatId int64, targetDate time.Time) (string, tgbotapi.InlineKeyboardMarkup, error)
 	ChangePrayerStatus(prayerAtUserId int, status bool) (tgbotapi.InlineKeyboardMarkup, error)
 	GetCityByName(cityName string) (qbot.City, error)
 	ChangeCity(chatId int64, cityId int) error
+	GetPrayersForMailing() ([]qbot.Answer, error)
 }
 
 type Service struct {
