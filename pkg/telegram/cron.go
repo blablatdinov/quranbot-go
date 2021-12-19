@@ -4,7 +4,8 @@ import "log"
 
 func (b *Bot) StartJobs() error {
 	jobs := map[string]interface{}{
-		"0 7 * * *": b.SendMorningContent,
+		"0 7 * * *":  b.SendMorningContent,
+		"0 20 * * *": b.sendPrayerTimes,
 	}
 	for cronTime, job := range jobs {
 		_, err := b.goCron.Cron(cronTime).Do(job.(func() error))

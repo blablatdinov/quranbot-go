@@ -31,6 +31,7 @@ func (r *PrayerPostgres) SubscriberHasCity(chatId int64) (bool, error) {
 	}
 }
 
+// GetPrayer получить время намаза для пользователя по идентификатору чата и дате
 func (r *PrayerPostgres) GetPrayer(chatId int64, date time.Time) ([]qbot.Prayer, error) {
 	var prayers []qbot.Prayer
 	query := `
@@ -44,7 +45,7 @@ func (r *PrayerPostgres) GetPrayer(chatId int64, date time.Time) ([]qbot.Prayer,
 		inner join bot_init_subscriber sub on city.id = sub.city_id
 		inner join prayer_day day on p.day_id = day.id
 		where sub.tg_chat_id = $1 and day.date = $2`
-	err := r.db.Select(&prayers, query, chatId, date.Format("01-01-2006"))
+	err := r.db.Select(&prayers, query, chatId, date.Format("01-02-2006"))
 	return prayers, err
 }
 
@@ -160,4 +161,19 @@ func (r *PrayerPostgres) ChangeCity(chatId int64, cityId int) error {
 	query := "update bot_init_subscriber set city_id = $1 where tg_chat_id = $2"
 	_, err := r.db.Exec(query, cityId, chatId)
 	return err
+}
+
+// GetSubscriberWithCityChatIds получить массив идентификаторов пользователей, у которых установлен город
+func (r *PrayerPostgres) GetSubscriberWithCityChatIds() ([]int64, error) {
+	var subscriberWithCityChatIds []int64
+	query := `
+		select
+			b.id
+		from bot_init_subscriber b
+		where b.city_id is not null`
+	err := r.db.Select(&subscriberWithCityChatIds, query)
+	if err != nil {
+		return []int64{}, err
+	}
+	return subscriberWithCityChatIds, nil
 }
