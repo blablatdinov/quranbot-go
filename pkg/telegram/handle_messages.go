@@ -74,7 +74,7 @@ func (b Bot) getRandomPodcast(message *tgbotapi.Message) error {
 			log.Printf("handler: %s", err.Error())
 		}
 	} else {
-		b.SendMessage(message.Chat.ID, podcast.LinkToFile)
+		b.SendMessage(message.Chat.ID, podcast.LinkToFile, tgbotapi.InlineKeyboardMarkup{})
 	}
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func (b Bot) getFavoriteAyats(message *tgbotapi.Message) error {
 	if err != nil {
 		if err.Error() == "subscriber hasn't favorite ayats" {
 			answer = "Вы не добавили аятов в избранное"
-			b.SendMessage(message.Chat.ID, answer)
+			b.SendMessage(message.Chat.ID, answer, tgbotapi.InlineKeyboardMarkup{})
 			return nil
 		} else {
 			return err

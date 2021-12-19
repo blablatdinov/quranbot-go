@@ -168,9 +168,9 @@ func (r *PrayerPostgres) GetSubscriberWithCityChatIds() ([]int64, error) {
 	var subscriberWithCityChatIds []int64
 	query := `
 		select
-			b.id
+			b.tg_chat_id
 		from bot_init_subscriber b
-		where b.city_id is not null`
+		where b.city_id is not null and is_active = true`
 	err := r.db.Select(&subscriberWithCityChatIds, query)
 	if err != nil {
 		return []int64{}, err

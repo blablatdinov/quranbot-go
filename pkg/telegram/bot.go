@@ -117,8 +117,10 @@ func (b *Bot) MassMailing(content []qbot.Answer) ([]int64, error) {
 		wg.Add(1)
 		chatId := elem.ChatId
 		content := elem.Content
+		keyboard := elem.Keyboard
 		go func(messagesChan chan tgbotapi.Message, wg *sync.WaitGroup) {
-			message, err := b.SendMessage(chatId, content)
+			log.Printf("Send mailing to %d (%s)", chatId, content[:50])
+			message, err := b.SendMessage(chatId, content, keyboard)
 			if err != nil {
 				log.Printf("Error: %s", err.Error())
 				wg.Done()
@@ -161,8 +163,8 @@ func (b *Bot) SendMorningContent() error {
 	return err
 }
 
-// sendPrayerTimes Рассылка времени намаза для след. дня
-func (b *Bot) sendPrayerTimes() error {
+// SendPrayerTimes Рассылка времени намаза для след. дня
+func (b *Bot) SendPrayerTimes() error {
 	log.Println("Send prayer times task started...")
 	prayerTimesAtUser, err := b.service.GetPrayersForMailing()
 	if err != nil {

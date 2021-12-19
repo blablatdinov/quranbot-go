@@ -42,12 +42,16 @@ func main() {
 	services := service.NewService(repos)
 	bot := telegram.NewBot(botApi, services, gocron.NewScheduler(time.UTC))
 	flag.Parse()
-	if flag.Args()[0] == "check" && flag.Args()[1] == "subscribers" {
+	if flag.Args()[0] == "check_subscribers" {
 		if err := bot.CheckSubscribers(); err != nil {
 			log.Fatal(err)
 		}
-	} else if flag.Args()[0] == "send" && flag.Args()[1] == "content" {
+	} else if flag.Args()[0] == "send_content" {
 		if err := bot.SendMorningContent(); err != nil {
+			log.Fatal(err)
+		}
+	} else if flag.Args()[0] == "send_prayers" {
+		if err := bot.SendPrayerTimes(); err != nil {
 			log.Fatal(err)
 		}
 	}

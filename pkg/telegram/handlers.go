@@ -46,9 +46,10 @@ func (b *Bot) handleError(chatId int64, err error) error {
 	return nil
 }
 
-func (b *Bot) SendMessage(chatId int64, text string) (tgbotapi.Message, error) {
+func (b *Bot) SendMessage(chatId int64, text string, keyboard tgbotapi.InlineKeyboardMarkup) (tgbotapi.Message, error) {
 	msg := tgbotapi.NewMessage(chatId, text)
 	msg.ParseMode = "markdown"
+	msg.ReplyMarkup = keyboard
 	message, err := b.bot.Send(msg)
 	return message, err
 }
