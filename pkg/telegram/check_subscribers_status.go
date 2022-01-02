@@ -1,9 +1,10 @@
 package telegram
 
 import (
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 	"sync"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 func (b *Bot) CheckSubscriberStatus(chatId int64, deactivatedSubscribersChan chan int64, limit chan struct{}, wg *sync.WaitGroup) {
@@ -55,12 +56,22 @@ func (b *Bot) CheckSubscribers() error {
 	deactivatedSubscribersIds := <-deactivatedSubscribersIdsChan
 	err = b.service.DeactivateSubscribers(deactivatedSubscribersIds)
 	if err != nil {
-		if err.Error() == "len(chatIds) must be more 0" {
-			log.Println("Unsubscribed 0 users")
-			return nil
+		if err.Error() != "len(chatIds) must be more 0" {
+			return err
 		}
-		return err
 	}
 	log.Printf("Unsubscribed %d users\n", len(deactivatedSubscribersIds))
+	activeSubscribersCount, err := b.service.GetSubscribersCount("active")
+	if err != nil {
+		log.Println(err.Error())
+		return nil
+	}
+	totalSubscribersCount, err := b.service.GetSubscribersCount("total")
+	if err != nil {
+		log.Println(err.Error())
+		return nil
+	}
+	log.Printf("Active users count: %d\n", activeSubscribersCount)
+	log.Printf("Total users count: %d\n", totalSubscribersCount)
 	return nil
 }

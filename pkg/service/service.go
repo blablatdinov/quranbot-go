@@ -1,10 +1,11 @@
 package service
 
 import (
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"qbot"
 	"qbot/pkg/repository"
 	"time"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 type Bot interface {
@@ -14,6 +15,7 @@ type Bot interface {
 	GetAyatByMailingDay(mailingDay int) (string, error)
 	GetActiveSubscribers() ([]qbot.Subscriber, error)
 	DeactivateSubscribers([]int64) error
+	GetSubscribersCount(string) (int, error)
 }
 
 type Content interface {

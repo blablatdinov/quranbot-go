@@ -1,9 +1,10 @@
 package repository
 
 import (
-	"github.com/jmoiron/sqlx"
 	"qbot"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type Bot interface {
@@ -13,6 +14,7 @@ type Bot interface {
 	GetAyatByMailingDay(mailingDay int) (qbot.Ayat, error)
 	GetActiveSubscribers() ([]qbot.Subscriber, error)
 	DeactivateSubscribers([]int64) error
+	GetSubscribersCount(string) (int, error)
 }
 
 type Content interface {

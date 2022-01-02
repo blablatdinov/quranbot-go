@@ -1,16 +1,17 @@
 package main
 
 import (
-	"github.com/go-co-op/gocron"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 	"log"
 	"os"
 	"qbot/pkg/repository"
 	"qbot/pkg/service"
 	"qbot/pkg/telegram"
 	"time"
+
+	"github.com/go-co-op/gocron"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -23,9 +24,9 @@ func main() {
 	}
 	debugMode := os.Getenv("DEBUG") == "true"
 	botApi.Debug = debugMode
-	databaseUrl := os.Getenv("DATABASE_URL")
+	databaseUrl := os.Getenv("GO_DATABASE_URL")
 	if databaseUrl == "" {
-		log.Fatalln("Set DATABASE_URL enviroment variable")
+		log.Fatalln("Set GO_DATABASE_URL enviroment variable")
 	}
 	db, err := repository.NewPostgres(databaseUrl)
 	if err != nil {
@@ -33,7 +34,7 @@ func main() {
 	}
 	timezone, err := time.LoadLocation("Europe/Moscow")
 	if err != nil {
-		log.Fatalln("Set DATABASE_URL enviroment variable")
+		log.Fatalln("Set GO_DATABASE_URL enviroment variable")
 	}
 	goCron := gocron.NewScheduler(timezone)
 	repos := repository.NewRepository(db)

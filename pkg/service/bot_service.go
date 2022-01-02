@@ -73,3 +73,8 @@ func (s *BotService) DeactivateSubscribers(chatIds []int64) error {
 	err := s.repo.DeactivateSubscribers(chatIds)
 	return err
 }
+
+func (s *BotService) GetSubscribersCount(param string) (int, error) {
+	res, err := s.repo.GetSubscribersCount(param)
+	return res, err
+}

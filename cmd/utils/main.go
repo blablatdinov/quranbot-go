@@ -2,15 +2,16 @@ package main
 
 import (
 	"flag"
-	"github.com/go-co-op/gocron"
-	"github.com/jmoiron/sqlx"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
 	"qbot/pkg/repository"
 	"qbot/pkg/service"
 	"qbot/pkg/telegram"
 	"time"
+
+	"github.com/go-co-op/gocron"
+	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	_ "github.com/lib/pq"
@@ -25,9 +26,9 @@ func initialize() (*tgbotapi.BotAPI, *sqlx.DB) {
 		log.Panic(err)
 	}
 	botApi.Debug = false
-	databaseUrl := os.Getenv("DATABASE_URL")
+	databaseUrl := os.Getenv("GO_DATABASE_URL")
 	if databaseUrl == "" {
-		log.Fatalln("Set DATABASE_URL enviroment variable")
+		log.Fatalln("Set GO_DATABASE_URL enviroment variable")
 	}
 	db, err := repository.NewPostgres(databaseUrl)
 	if err != nil {

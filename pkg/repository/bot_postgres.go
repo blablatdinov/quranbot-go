@@ -2,8 +2,9 @@ package repository
 
 import (
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"qbot"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type BotPostgres struct {
@@ -112,6 +113,25 @@ func (r *BotPostgres) GetActiveSubscribers() ([]qbot.Subscriber, error) {
 	`
 	err := r.db.Select(&subscribers, query)
 	return subscribers, err
+}
+
+// GetActiveSubscribersCount получить кол-во активных подписчиков
+func (r *BotPostgres) GetSubscribersCount(param string) (int, error) {
+	var result int
+	var query string
+	if param == "total" {
+		query = "select count(*) from bot_init_subscriber"
+	} else if param == "active" {
+		query = "select count(*) from bot_init_subscriber where is_active='t'"
+	} else {
+		return 0, fmt.Errorf("unsupported param: %s", param)
+	}
+
+	row := r.db.QueryRow(query)
+	if err := row.Scan(&result); err != nil {
+		return 0, err
+	}
+	return result, nil
 }
 
 func GenerateConditionForUpdatingSubscribers(chatIds []int64) string {
