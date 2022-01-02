@@ -119,7 +119,7 @@ func (b *Bot) MassMailing(content []qbot.Answer) ([]int64, error) {
 		_elem := elem
 		go func(messagesChan chan tgbotapi.Message, wg *sync.WaitGroup) {
 			log.Printf("Send mailing to %d (%s)", _elem.ChatId, _elem.Content[:50])
-			message, err := b.SendMessageV2(_elem)
+			message, err := b.SendMessage(_elem)
 			if err != nil {
 				log.Printf("Error: %s", err.Error())
 				wg.Done()

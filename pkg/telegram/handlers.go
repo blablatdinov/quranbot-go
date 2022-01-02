@@ -48,15 +48,7 @@ func (b *Bot) handleError(chatId int64, err error) error {
 	return nil
 }
 
-func (b *Bot) SendMessage(chatId int64, text string, keyboard tgbotapi.InlineKeyboardMarkup) (tgbotapi.Message, error) {
-	msg := tgbotapi.NewMessage(chatId, text)
-	msg.ParseMode = "markdown"
-	msg.ReplyMarkup = keyboard
-	message, err := b.bot.Send(msg)
-	return message, err
-}
-
-func (b *Bot) SendMessageV2(answer qbot.Answer) (tgbotapi.Message, error) {
+func (b *Bot) SendMessage(answer qbot.Answer) (tgbotapi.Message, error) {
 	msg := tgbotapi.NewMessage(answer.ChatId, answer.Content)
 	msg.ParseMode = "markdown"
 	if answer.HasKeyboard() {

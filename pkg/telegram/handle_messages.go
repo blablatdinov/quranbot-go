@@ -3,10 +3,12 @@ package telegram
 import (
 	"errors"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
+	"qbot"
 	"qbot/pkg/service"
 	"time"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 func (b *Bot) handleMessage(message *tgbotapi.Message) error {
@@ -74,7 +76,13 @@ func (b Bot) getRandomPodcast(message *tgbotapi.Message) error {
 			log.Printf("handler: %s", err.Error())
 		}
 	} else {
-		b.SendMessage(message.Chat.ID, podcast.LinkToFile, tgbotapi.InlineKeyboardMarkup{})
+		b.SendMessage(
+			qbot.Answer{
+				ChatId:   message.Chat.ID,
+				Content:  podcast.LinkToFile,
+				Keyboard: tgbotapi.InlineKeyboardMarkup{},
+			},
+		)
 	}
 	if err != nil {
 		return err
@@ -87,7 +95,13 @@ func (b Bot) getFavoriteAyats(message *tgbotapi.Message) error {
 	if err != nil {
 		if err.Error() == "subscriber hasn't favorite ayats" {
 			answer = "Вы не добавили аятов в избранное"
-			b.SendMessage(message.Chat.ID, answer, tgbotapi.InlineKeyboardMarkup{})
+			b.SendMessage(
+				qbot.Answer{
+					ChatId:   message.Chat.ID,
+					Content:  answer,
+					Keyboard: tgbotapi.InlineKeyboardMarkup{},
+				},
+			)
 			return nil
 		} else {
 			return err
