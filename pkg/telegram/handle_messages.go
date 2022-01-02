@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"qbot"
-	"qbot/pkg/service"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -127,22 +126,10 @@ func (b Bot) searchAyatBySuraAyatNum(message *tgbotapi.Message) error {
 		return err
 	}
 	log.Printf("searchAyatBySuraAyatNum: search '%s' ayat\n", message.Text)
-	answer, keyboard, err := b.service.GetAyatBySuraAyatNum(message.Chat.ID, message.Text, "")
-	ayatNotFoundText := "Аят не найден"
-	suraNotFoundText := "Сура не найдена"
-	msg := tgbotapi.NewMessage(message.Chat.ID, answer)
-	msg.ReplyMarkup = keyboard
-	if err != nil && err.Error() == "sura not found" {
-		msg.Text = suraNotFoundText
-		msg.ReplyMarkup = service.GetDefaultKeyboard()
-	} else if err != nil && err.Error() == "ayat not found" {
-		msg.Text = ayatNotFoundText
-		msg.ReplyMarkup = service.GetDefaultKeyboard()
-	} else if err != nil {
+	answer, err := b.service.GetAyatBySuraAyatNum(message.Chat.ID, message.Text, "")
+	if err != nil {
 		return err
 	}
-	log.Printf("Exit from if\n")
-	msg.ParseMode = "markdown"
-	_, err = b.bot.Send(msg)
-	return err
+	b.SendMessage(answer)
+	return nil
 }

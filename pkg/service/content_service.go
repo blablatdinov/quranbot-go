@@ -30,18 +30,18 @@ func (s *ContentService) GetAyatByMailingDay(mailingDay int) (string, error) {
 	return content, err
 }
 
-func (s *ContentService) GetAyatBySuraAyatNum(chatId int64, query string, state string) (string, tgbotapi.InlineKeyboardMarkup, error) {
+func (s *ContentService) GetAyatBySuraAyatNum(chatId int64, query string, state string) (qbot.Answer, error) {
 	splittedQuery := strings.Split(query, ":")
 	suraNum, err := strconv.Atoi(strings.TrimSpace(splittedQuery[0]))
 	if err != nil {
-		return "", tgbotapi.InlineKeyboardMarkup{}, err
+		return qbot.Answer{}, err
 	}
 	if suraNum < 1 || suraNum > 114 {
-		return "", tgbotapi.InlineKeyboardMarkup{}, errors.New("sura not found")
+		return qbot.Answer{ChatId: chatId, Content: "Сура не найдена"}, nil
 	}
 	ayats, err := s.repo.GetAyatsBySuraNum(suraNum)
 	if err != nil {
-		return "", tgbotapi.InlineKeyboardMarkup{}, err
+		return qbot.Answer{}, err
 	}
 	var targetAyat qbot.Ayat
 	for i, ayat := range ayats {
@@ -50,15 +50,15 @@ func (s *ContentService) GetAyatBySuraAyatNum(chatId int64, query string, state 
 			break
 		}
 		if i == len(ayats)-1 {
-			return "", tgbotapi.InlineKeyboardMarkup{}, errors.New("ayat not found")
+			return qbot.Answer{ChatId: chatId, Content: "Аят не найден"}, nil
 		}
 	}
 	targetAyat.IsFavorite = s.repo.AyatIsFavorite(chatId, targetAyat.Id)
 	keyboard, err := s.getAyatKeyboard(chatId, targetAyat, state)
 	if err != nil {
-		return "", tgbotapi.InlineKeyboardMarkup{}, err
+		return qbot.Answer{}, err
 	}
-	return renderAyat(targetAyat), keyboard, nil
+	return qbot.Answer{ChatId: chatId, Content: renderAyat(targetAyat), Keyboard: keyboard}, nil
 }
 
 func (s *ContentService) GetFavoriteAyats(chatId int64) (string, tgbotapi.InlineKeyboardMarkup, error) {

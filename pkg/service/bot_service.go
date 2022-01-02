@@ -6,6 +6,8 @@ import (
 	"log"
 	"qbot"
 	"qbot/pkg/repository"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 type BotService struct {
@@ -18,7 +20,7 @@ func NewBotService(repo repository.Bot) *BotService {
 	}
 }
 
-func (s *BotService) CreateSubscriber(chatId int64) (string, bool) {
+func (s *BotService) CreateSubscriber(chatId int64) []qbot.Answer {
 	subscriber, created, err := s.repo.GetOrCreateSubscriber(chatId)
 	if err != nil {
 		log.Fatal(err)
@@ -27,12 +29,24 @@ func (s *BotService) CreateSubscriber(chatId int64) (string, bool) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		return "Вы успешно зарегестрировались", created
+		return []qbot.Answer{{
+			ChatId:   chatId,
+			Content:  "Вы успешно зарегестрировались",
+			Keyboard: tgbotapi.InlineKeyboardMarkup{},
+		}}
 	} else {
 		if subscriber.IsActive {
-			return "Вы уже зарегестрированы", created
+			return []qbot.Answer{{
+				ChatId:   chatId,
+				Content:  "Вы уже зарегестрированы",
+				Keyboard: tgbotapi.InlineKeyboardMarkup{},
+			}}
 		} else {
-			return fmt.Sprintf("Рады видеть вас снова, вы продолжите с дня %d", subscriber.Day), created
+			return []qbot.Answer{{
+				ChatId:   chatId,
+				Content:  fmt.Sprintf("Рады видеть вас снова, вы продолжите с дня %d", subscriber.Day),
+				Keyboard: tgbotapi.InlineKeyboardMarkup{},
+			}}
 		}
 	}
 }

@@ -21,19 +21,9 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 }
 
 func (b *Bot) handleStartCommand(message *tgbotapi.Message) error {
-	regAnswer, created := b.service.CreateSubscriber(message.Chat.ID)
-	messages := []string{regAnswer}
-	if created {
-		content, err := b.service.Bot.GetAyatByMailingDay(1)
-		if err != nil {
-			return err
-		}
-		messages = append(messages, content)
-	}
-	for _, answer := range messages {
-		msg := tgbotapi.NewMessage(message.Chat.ID, answer)
-		msg.ParseMode = "markdown"
-		b.bot.Send(msg)
+	answers := b.service.CreateSubscriber(message.Chat.ID)
+	for _, answer := range answers {
+		b.SendMessage(answer)
 	}
 	return nil
 }
