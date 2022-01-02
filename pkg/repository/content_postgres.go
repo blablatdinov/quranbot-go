@@ -208,7 +208,7 @@ func (r *ContentPostgres) GetMorningContentForTodayMailing() ([]qbot.MailingCont
 	select
 		s.tg_chat_id,
 		STRING_AGG(
-			'__' || sura.number::character varying || ':' || a.ayat || ')__ ' || a .content || '\n',
+			'__' || sura.number::character varying || ':' || a.ayat || ')__ ' || a .content || '\n\n',
 			''
 			order by a.id
 		) as content,

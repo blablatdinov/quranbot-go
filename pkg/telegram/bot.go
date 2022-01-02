@@ -139,8 +139,11 @@ func (b *Bot) MassMailing(content []qbot.Answer) ([]int64, error) {
 	for _, c := range sendedMessages {
 		sendedToChatIds = append(sendedToChatIds, c.Chat.ID)
 	}
-	if err := b.service.DeactivateSubscribers(difference(sendedMessages, content)); err != nil {
-		return []int64{}, err
+	deactivatedSubscriptionIds := difference(sendedMessages, content)
+	if len(deactivatedSubscriptionIds) > 0 {
+		if err := b.service.DeactivateSubscribers(deactivatedSubscriptionIds); err != nil {
+			return []int64{}, err
+		}
 	}
 	return sendedToChatIds, nil
 }

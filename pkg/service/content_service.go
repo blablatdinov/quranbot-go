@@ -372,12 +372,12 @@ func (s *ContentService) GetMorningContentForTodayMailing() ([]qbot.Answer, erro
 	relativeUrl := strings.Split(contentsForSubscriber[0].Link, "|")[0]
 	link := fmt.Sprintf("Ссылка на [источник](https://umma.ru%s)", relativeUrl)
 	for _, content := range contentsForSubscriber {
+		_content := strings.ReplaceAll(content.Content, "\\n\\n", "\n\n") // Почему-то \n из запроса в БД не переносит
 		answer := qbot.Answer{
 			ChatId:   content.ChatId,
-			Content:  content.Content + link,
+			Content:  _content + link,
 			Keyboard: tgbotapi.InlineKeyboardMarkup{},
 		}
-		fmt.Printf("Service layer: GetMorningContentForTodayMailing: %d %s\n", answer.ChatId, answer.Content)
 		result = append(result, answer)
 	}
 	return result, nil
