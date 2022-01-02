@@ -3,11 +3,12 @@ package service
 import (
 	"errors"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"qbot"
 	"qbot/pkg/repository"
 	"strconv"
 	"strings"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 type ContentService struct {
@@ -362,9 +363,24 @@ func getTextAndDataForFavoriteButton(isFavorite bool) (string, string) {
 	return textForFavorButton, dataForFavorButtonTemplate
 }
 
-func (s *ContentService) GetMorningContentForTodayMailing() ([]qbot.MailingContent, error) {
-	content, err := s.repo.GetMorningContentForTodayMailing()
-	return content, err
+func (s *ContentService) GetMorningContentForTodayMailing() ([]qbot.Answer, error) {
+	var result []qbot.Answer
+	contentsForSubscriber, err := s.repo.GetMorningContentForTodayMailing()
+	if err != nil {
+		return []qbot.Answer{}, err
+	}
+	relativeUrl := strings.Split(contentsForSubscriber[0].Link, "|")[0]
+	link := fmt.Sprintf("Ссылка на [источник](https://umma.ru%s)", relativeUrl)
+	for _, content := range contentsForSubscriber {
+		answer := qbot.Answer{
+			ChatId:   content.ChatId,
+			Content:  content.Content + link,
+			Keyboard: tgbotapi.InlineKeyboardMarkup{},
+		}
+		fmt.Printf("Service layer: GetMorningContentForTodayMailing: %d %s\n", answer.ChatId, answer.Content)
+		result = append(result, answer)
+	}
+	return result, nil
 }
 
 func (s *ContentService) UpdateDaysForSubscribers(chatIds []int64) error {

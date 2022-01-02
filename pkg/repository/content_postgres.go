@@ -3,9 +3,10 @@ package repository
 import (
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"log"
 	"qbot"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type ContentPostgres struct {
@@ -200,6 +201,7 @@ func (r *ContentPostgres) GetAdjacentAyats(chatId int64, ayatId int) ([]qbot.Aya
 	return ayats, err
 }
 
+// GetMorningContentForTodayMailing достать из базы данных контент для утренней рассылки
 func (r *ContentPostgres) GetMorningContentForTodayMailing() ([]qbot.MailingContent, error) {
 	var contentForMailing []qbot.MailingContent
 	query := `

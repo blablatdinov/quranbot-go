@@ -27,7 +27,7 @@ type Content interface {
 	GetRandomPodcast() (qbot.Podcast, error)
 	AddToFavorite(chatId int64, ayatId int, state string) (string, tgbotapi.InlineKeyboardMarkup, error)
 	RemoveFromFavorite(chatId int64, ayatId int, state string) (string, tgbotapi.InlineKeyboardMarkup, error)
-	GetMorningContentForTodayMailing() ([]qbot.MailingContent, error)
+	GetMorningContentForTodayMailing() ([]qbot.Answer, error)
 	UpdateDaysForSubscribers([]int64) error
 }
 

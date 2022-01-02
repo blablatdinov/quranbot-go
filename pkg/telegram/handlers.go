@@ -1,9 +1,11 @@
 package telegram
 
 import (
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
+	"qbot"
 	"regexp"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 const commandStart = "start"
@@ -50,6 +52,16 @@ func (b *Bot) SendMessage(chatId int64, text string, keyboard tgbotapi.InlineKey
 	msg := tgbotapi.NewMessage(chatId, text)
 	msg.ParseMode = "markdown"
 	msg.ReplyMarkup = keyboard
+	message, err := b.bot.Send(msg)
+	return message, err
+}
+
+func (b *Bot) SendMessageV2(answer qbot.Answer) (tgbotapi.Message, error) {
+	msg := tgbotapi.NewMessage(answer.ChatId, answer.Content)
+	msg.ParseMode = "markdown"
+	if answer.HasKeyboard() {
+		msg.ReplyMarkup = answer.Keyboard
+	}
 	message, err := b.bot.Send(msg)
 	return message, err
 }

@@ -3,14 +3,15 @@ package telegram
 import (
 	"errors"
 	"fmt"
-	"github.com/go-co-op/gocron"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 	"net/http"
 	"os"
 	"qbot"
 	"qbot/pkg/service"
 	"sync"
+
+	"github.com/go-co-op/gocron"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 type Bot struct {
@@ -115,12 +116,10 @@ func (b *Bot) MassMailing(content []qbot.Answer) ([]int64, error) {
 	var wg sync.WaitGroup
 	for _, elem := range content {
 		wg.Add(1)
-		chatId := elem.ChatId
-		content := elem.Content
-		keyboard := elem.Keyboard
+		_elem := elem
 		go func(messagesChan chan tgbotapi.Message, wg *sync.WaitGroup) {
-			log.Printf("Send mailing to %d (%s)", chatId, content[:50])
-			message, err := b.SendMessage(chatId, content, keyboard)
+			log.Printf("Send mailing to %d (%s)", _elem.ChatId, _elem.Content[:50])
+			message, err := b.SendMessageV2(_elem)
 			if err != nil {
 				log.Printf("Error: %s", err.Error())
 				wg.Done()
@@ -151,8 +150,11 @@ func (b *Bot) MassMailing(content []qbot.Answer) ([]int64, error) {
 func (b *Bot) SendMorningContent() error {
 	log.Println("Send morning content task started...")
 	content, err := b.service.GetMorningContentForTodayMailing()
-	log.Println(len(content))
-	chatIdsForUpdateDay, err := b.MassMailing([]qbot.Answer{})
+	if err != nil {
+		return err
+	}
+	log.Println("Content length:", len(content))
+	chatIdsForUpdateDay, err := b.MassMailing(content)
 	if err != nil {
 		return err
 	}
