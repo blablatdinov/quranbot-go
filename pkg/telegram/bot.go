@@ -61,7 +61,7 @@ func (b *Bot) Start() error {
 			return err
 		}
 		if info.LastErrorDate != 0 {
-			return errors.New(fmt.Sprintf("Telegram callback failed: %s", info.LastErrorMessage))
+			return fmt.Errorf("telegram callback failed: %s", info.LastErrorMessage)
 		}
 		log.Println("Getting updates channel...")
 		updates = b.bot.ListenForWebhook("/" + b.bot.Token)

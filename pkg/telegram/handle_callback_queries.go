@@ -2,8 +2,9 @@ package telegram
 
 import (
 	"errors"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"strconv"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 func (b *Bot) handleQuery(callbackQuery *tgbotapi.CallbackQuery) error {
@@ -63,6 +64,9 @@ func (b *Bot) swipeToFavoriteAyat(callbackQuery *tgbotapi.CallbackQuery) error {
 	chatId := callbackQuery.Message.Chat.ID
 	messageId := callbackQuery.Message.MessageID
 	answer, keyboard, err := b.service.GetFavoriteAyatsFromKeyboard(callbackQuery.Message.Chat.ID, ayatId)
+	if err != nil {
+		return err
+	}
 	msg := tgbotapi.NewEditMessageText(chatId, messageId, answer)
 	msg.ParseMode = "markdown"
 	b.bot.Send(msg)
@@ -135,6 +139,9 @@ func (b *Bot) swipeToAyat(callbackQuery *tgbotapi.CallbackQuery) error {
 		return err
 	}
 	answer, keyboard, err := b.service.GetAyatById(chatId, ayatId, state)
+	if err != nil {
+		return err
+	}
 	msg := tgbotapi.NewEditMessageText(chatId, messageId, answer)
 	msg.ParseMode = "markdown"
 	b.bot.Send(msg)
