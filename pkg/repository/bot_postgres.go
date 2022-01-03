@@ -172,7 +172,7 @@ func (r *BotPostgres) SaveMessage(message qbot.Message) error {
 	} else {
 		query := `
 			insert into bot_init_message
-			(date, from_user_id, message_id, chat_id, text, json, is_unknown, mailing)
+			(date, from_user_id, message_id, chat_id, text, json, is_unknown, mailing_id)
 			values
 			($1, $2, $3, $4, $5, $6, $7, $8)
 		`
@@ -187,15 +187,9 @@ func (r *BotPostgres) BulkSaveMessages(messages []qbot.Message) error {
 		(date, from_user_id, message_id, chat_id, text, json, mailing_id, is_unknown)
 		values
 	`
-	values_array := []string{}
+	valuesArray := []string{}
 	for _, message := range messages {
-		fmt.Println(message.Date)
-		fmt.Println(message.Date)
-		fmt.Println(message.Date)
-		fmt.Println(message.Date)
-		fmt.Println(message.Date)
-		fmt.Println(message.Date)
-		values_array = append(values_array, fmt.Sprintf(
+		valuesArray = append(valuesArray, fmt.Sprintf(
 			"('%s'::timestamptz, %d, %d, %d, '%s', '%s', %d, '%s')",
 			message.Date,
 			message.FromUserId,
@@ -207,7 +201,7 @@ func (r *BotPostgres) BulkSaveMessages(messages []qbot.Message) error {
 			message.IsUnknown,
 		))
 	}
-	values := strings.Join(values_array, ",")
+	values := strings.Join(valuesArray, ",")
 	fmt.Println(values)
 	_, err := r.db.Exec(query + values)
 	if err != nil {

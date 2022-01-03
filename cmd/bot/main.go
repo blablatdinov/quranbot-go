@@ -6,6 +6,8 @@ import (
 	"qbot/pkg/repository"
 	"qbot/pkg/service"
 	"qbot/pkg/telegram"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-co-op/gocron"
@@ -25,6 +27,14 @@ func main() {
 	debugMode := os.Getenv("DEBUG") == "true"
 	botApi.Debug = debugMode
 	databaseUrl := os.Getenv("GO_DATABASE_URL")
+	adminsList := []int64{}
+	for _, adminIdStr := range strings.Split(os.Getenv("ADMINS"), ",") {
+		adminId, err := strconv.Atoi(adminIdStr)
+		if err != nil {
+			log.Fatal("Check ADMINS env variable")
+		}
+		adminsList = append(adminsList, int64(adminId))
+	}
 	if databaseUrl == "" {
 		log.Fatalln("Set GO_DATABASE_URL enviroment variable")
 	}
@@ -39,7 +49,7 @@ func main() {
 	goCron := gocron.NewScheduler(timezone)
 	repos := repository.NewRepository(db)
 	services := service.NewService(repos)
-	bot := telegram.NewBot(botApi, services, goCron)
+	bot := telegram.NewBot(botApi, services, goCron, adminsList)
 	if err := bot.StartJobs(); err != nil {
 		log.Fatal(err)
 	}

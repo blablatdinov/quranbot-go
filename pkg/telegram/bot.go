@@ -15,16 +15,18 @@ import (
 )
 
 type Bot struct {
-	bot     *tgbotapi.BotAPI
-	service *service.Service
-	goCron  *gocron.Scheduler
+	bot        *tgbotapi.BotAPI
+	service    *service.Service
+	goCron     *gocron.Scheduler
+	adminsList []int64
 }
 
-func NewBot(bot *tgbotapi.BotAPI, service *service.Service, goCron *gocron.Scheduler) *Bot {
+func NewBot(bot *tgbotapi.BotAPI, service *service.Service, goCron *gocron.Scheduler, adminsList []int64) *Bot {
 	return &Bot{
-		bot:     bot,
-		service: service,
-		goCron:  goCron,
+		bot:        bot,
+		service:    service,
+		goCron:     goCron,
+		adminsList: adminsList,
 	}
 }
 
@@ -152,7 +154,17 @@ func (b *Bot) MassMailing(content []qbot.Answer) ([]int64, error) {
 		}
 	}
 	b.service.BulkSaveMessages(sendedMessages, mailingId)
+	b.sendMessageToAdmins(fmt.Sprintf("Рассылка #%d завершена.", mailingId))
 	return sendedToChatIds, nil
+}
+
+func (b *Bot) sendMessageToAdmins(message string) {
+	for _, adminId := range b.adminsList {
+		b.SendMessage(qbot.Answer{
+			ChatId:  adminId,
+			Content: message,
+		})
+	}
 }
 
 // SendMorningContent рассылка аятов

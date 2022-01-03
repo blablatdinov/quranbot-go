@@ -7,6 +7,8 @@ import (
 	"qbot/pkg/repository"
 	"qbot/pkg/service"
 	"qbot/pkg/telegram"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-co-op/gocron"
@@ -41,7 +43,15 @@ func main() {
 	botApi, db := initialize()
 	repos := repository.NewRepository(db)
 	services := service.NewService(repos)
-	bot := telegram.NewBot(botApi, services, gocron.NewScheduler(time.UTC))
+	adminsList := []int64{}
+	for _, adminIdStr := range strings.Split(os.Getenv("ADMINS"), ",") {
+		adminId, err := strconv.Atoi(adminIdStr)
+		if err != nil {
+			log.Fatal("Check ADMINS env variable")
+		}
+		adminsList = append(adminsList, int64(adminId))
+	}
+	bot := telegram.NewBot(botApi, services, gocron.NewScheduler(time.UTC), adminsList)
 	flag.Parse()
 	if flag.Args()[0] == "check_subscribers" {
 		if err := bot.CheckSubscribers(); err != nil {
