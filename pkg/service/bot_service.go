@@ -1,13 +1,14 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 	"qbot"
 	"qbot/pkg/repository"
-
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"time"
 )
 
 type BotService struct {
@@ -91,4 +92,48 @@ func (s *BotService) DeactivateSubscribers(chatIds []int64) error {
 func (s *BotService) GetSubscribersCount(param string) (int, error) {
 	res, err := s.repo.GetSubscribersCount(param)
 	return res, err
+}
+
+func (s *BotService) SaveMessage(message *tgbotapi.Message, isUnknown bool) {
+	message_ := s.tgbotapiMessageToQbotMessage(*message, 0, isUnknown)
+	if err := s.repo.SaveMessage(message_); err != nil {
+
+	}
+}
+
+func (s *BotService) BulkSaveMessages(messages []tgbotapi.Message, mailingId int) {
+	messages_ := []qbot.Message{}
+	for _, message := range messages {
+		messages_ = append(messages_, s.tgbotapiMessageToQbotMessage(message, mailingId, false))
+	}
+	s.repo.BulkSaveMessages(messages_)
+}
+
+func (s *BotService) CreateMailing() (int, error) {
+	return s.repo.CreateMailing()
+}
+
+func (s *BotService) tgbotapiMessageToQbotMessage(message tgbotapi.Message, mailingId int, isUnknown bool) qbot.Message {
+	messageJson, err := json.Marshal(message)
+	if err != nil {
+
+	}
+	var isUnknown_ string
+	if isUnknown {
+		isUnknown_ = "t"
+	} else {
+		isUnknown_ = "f"
+	}
+	messageJsonString := string(messageJson)
+	dateTime := time.Unix(int64(message.Date), 0)
+	return qbot.Message{
+		Date:       dateTime.Format("2006-02-01T15:04:05") + "+03:00",
+		FromUserId: int64(message.From.ID),
+		MessageId:  message.MessageID,
+		ChatId:     message.Chat.ID,
+		Text:       message.Text,
+		Json:       messageJsonString,
+		Mailing:    mailingId,
+		IsUnknown:  isUnknown_,
+	}
 }

@@ -2,7 +2,9 @@ package repository
 
 import (
 	"fmt"
+	"log"
 	"qbot"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -155,4 +157,73 @@ func (r *BotPostgres) DeactivateSubscribers(chatIds []int64) error {
 	%s`, GenerateConditionForUpdatingSubscribers(chatIds))
 	_, err := r.db.Exec(query)
 	return err
+}
+
+func (r *BotPostgres) SaveMessage(message qbot.Message) error {
+	if message.Mailing == 0 {
+		query := `
+			insert into bot_init_message
+			(date, from_user_id, message_id, chat_id, text, json, is_unknown)
+			values
+			($1, $2, $3, $4, $5, $6, $7)
+		`
+		_, err := r.db.Exec(query, message.Date, message.FromUserId, message.MessageId, message.ChatId, message.Text, message.Json, message.IsUnknown)
+		return err
+	} else {
+		query := `
+			insert into bot_init_message
+			(date, from_user_id, message_id, chat_id, text, json, is_unknown, mailing)
+			values
+			($1, $2, $3, $4, $5, $6, $7, $8)
+		`
+		_, err := r.db.Exec(query, message.Date, message.FromUserId, message.MessageId, message.ChatId, message.Text, message.Json, message.IsUnknown, message.Mailing)
+		return err
+	}
+}
+
+func (r *BotPostgres) BulkSaveMessages(messages []qbot.Message) error {
+	query := `
+		insert into bot_init_message
+		(date, from_user_id, message_id, chat_id, text, json, mailing_id, is_unknown)
+		values
+	`
+	values_array := []string{}
+	for _, message := range messages {
+		fmt.Println(message.Date)
+		fmt.Println(message.Date)
+		fmt.Println(message.Date)
+		fmt.Println(message.Date)
+		fmt.Println(message.Date)
+		fmt.Println(message.Date)
+		values_array = append(values_array, fmt.Sprintf(
+			"('%s'::timestamptz, %d, %d, %d, '%s', '%s', %d, '%s')",
+			message.Date,
+			message.FromUserId,
+			message.MessageId,
+			message.ChatId,
+			message.Text,
+			message.Json,
+			message.Mailing,
+			message.IsUnknown,
+		))
+	}
+	values := strings.Join(values_array, ",")
+	fmt.Println(values)
+	_, err := r.db.Exec(query + values)
+	if err != nil {
+		log.Printf("Repo layer ERROR: %s\n", err.Error())
+		return err
+	}
+	return nil
+}
+
+func (r *BotPostgres) CreateMailing() (int, error) {
+	var mailingId int
+	query := "insert into bot_init_mailing default values returning id"
+	row := r.db.QueryRow(query)
+	err := row.Scan(&mailingId)
+	if err != nil {
+		return 0, err
+	}
+	return mailingId, nil
 }

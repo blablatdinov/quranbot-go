@@ -112,13 +112,18 @@ ENDLOOP:
 
 // MassMailing функция для массовой рассылки
 func (b *Bot) MassMailing(content []qbot.Answer) ([]int64, error) {
+	mailingId, err := b.service.CreateMailing()
+	if err != nil {
+		return []int64{}, err
+	}
+	log.Printf("Start mailing (%d)...", mailingId)
 	messagesChan := make(chan tgbotapi.Message, len(content))
 	var wg sync.WaitGroup
 	for _, elem := range content {
 		wg.Add(1)
 		_elem := elem
 		go func(messagesChan chan tgbotapi.Message, wg *sync.WaitGroup) {
-			log.Printf("Send mailing to %d (%s)", _elem.ChatId, _elem.Content[:50])
+			log.Printf("Send message to %d: (%s)", _elem.ChatId, _elem.Content[:50])
 			message, err := b.SendMessage(_elem)
 			if err != nil {
 				log.Printf("Error: %s", err.Error())
@@ -133,6 +138,7 @@ func (b *Bot) MassMailing(content []qbot.Answer) ([]int64, error) {
 	messageListChan := make(chan []tgbotapi.Message, 1)
 	go b.ReadMessagesChan(quitFromReadLoop, messagesChan, messageListChan)
 	wg.Wait()
+	log.Printf("Mailing (%d) sended", mailingId)
 	quitFromReadLoop <- struct{}{}
 	sendedMessages := <-messageListChan
 	var sendedToChatIds []int64
@@ -145,6 +151,7 @@ func (b *Bot) MassMailing(content []qbot.Answer) ([]int64, error) {
 			return []int64{}, err
 		}
 	}
+	b.service.BulkSaveMessages(sendedMessages, mailingId)
 	return sendedToChatIds, nil
 }
 

@@ -15,6 +15,9 @@ type Bot interface {
 	GetActiveSubscribers() ([]qbot.Subscriber, error)
 	DeactivateSubscribers([]int64) error
 	GetSubscribersCount(string) (int, error)
+	SaveMessage(qbot.Message) error
+	BulkSaveMessages(messages []qbot.Message) error
+	CreateMailing() (int, error)
 }
 
 type Content interface {

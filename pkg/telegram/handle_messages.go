@@ -38,16 +38,21 @@ func (b Bot) changeCity(message *tgbotapi.Message) error {
 		return err
 	}
 	if city.Id == 0 {
+		b.service.SaveMessage(message, true)
 		return errors.New("city not found")
 	}
+	b.service.SaveMessage(message, false)
 	err = b.service.ChangeCity(message.Chat.ID, city.Id)
-	msg := tgbotapi.NewMessage(message.Chat.ID, fmt.Sprintf("Вам будет приходить время намаза для г. %s", city.Name))
-	b.bot.Send(msg)
+	b.SendMessage(qbot.Answer{
+		ChatId:  message.Chat.ID,
+		Content: fmt.Sprintf("Вам будет приходить время намаза для г. %s", city.Name),
+	})
 	return err
 }
 
 // getPrayerTimes получить время намазов для пользователя
 func (b Bot) getPrayerTimes(message *tgbotapi.Message) error {
+	b.service.SaveMessage(message, false)
 	answer, keyboard, err := b.service.GetPrayer(message.Chat.ID, time.Now())
 	if err != nil {
 		if err.Error() == "subscriber hasn't city" {
@@ -63,6 +68,7 @@ func (b Bot) getPrayerTimes(message *tgbotapi.Message) error {
 }
 
 func (b Bot) getRandomPodcast(message *tgbotapi.Message) error {
+	b.service.SaveMessage(message, false)
 	err := b.service.SetSubscriberState(message.Chat.ID, "")
 	if err != nil {
 		return err
@@ -90,6 +96,7 @@ func (b Bot) getRandomPodcast(message *tgbotapi.Message) error {
 }
 
 func (b Bot) getFavoriteAyats(message *tgbotapi.Message) error {
+	b.service.SaveMessage(message, false)
 	answer, keyboard, err := b.service.GetFavoriteAyats(message.Chat.ID)
 	if err != nil {
 		if err.Error() == "subscriber hasn't favorite ayats" {
@@ -121,6 +128,7 @@ func (b Bot) getFavoriteAyats(message *tgbotapi.Message) error {
 }
 
 func (b Bot) searchAyatBySuraAyatNum(message *tgbotapi.Message) error {
+	b.service.SaveMessage(message, false)
 	err := b.service.SetSubscriberState(message.Chat.ID, "")
 	if err != nil {
 		return err
