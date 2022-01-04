@@ -9,6 +9,7 @@ import (
 	"qbot/pkg/telegram"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-co-op/gocron"
@@ -65,5 +66,14 @@ func main() {
 		if err := bot.SendPrayerTimes(); err != nil {
 			log.Fatal(err)
 		}
+	} else if flag.Args()[0] == "cron" {
+		var wg sync.WaitGroup
+		wg.Add(1)
+		if err := bot.StartJobs(); err != nil {
+			log.Fatal(err)
+		}
+		wg.Wait()
+	} else {
+		log.Fatal("Command not found")
 	}
 }

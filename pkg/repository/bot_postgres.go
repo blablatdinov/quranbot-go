@@ -5,6 +5,7 @@ import (
 	"log"
 	"qbot"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -137,13 +138,13 @@ func (r *BotPostgres) GetSubscribersCount(param string) (int, error) {
 }
 
 func GenerateConditionForUpdatingSubscribers(chatIds []int64) string {
-	result := "where "
+	result := "WHERE "
 	var or string
 	for i, chatId := range chatIds {
 		if i == len(chatIds)-1 {
 			or = ""
 		} else {
-			or = " or "
+			or = " OR "
 		}
 		result += fmt.Sprintf("tg_chat_id=%d%s", chatId, or)
 	}
@@ -152,11 +153,41 @@ func GenerateConditionForUpdatingSubscribers(chatIds []int64) string {
 
 func (r *BotPostgres) DeactivateSubscribers(chatIds []int64) error {
 	query := fmt.Sprintf(`
-	update bot_init_subscriber
-	set is_active = 'f'
+		UPDATE bot_init_subscriber
+		SET is_active = 'f'
 	%s`, GenerateConditionForUpdatingSubscribers(chatIds))
 	_, err := r.db.Exec(query)
 	return err
+}
+
+func (r *BotPostgres) CreateSubscriberActions(chatIds []int64, action string) error {
+	subscriberIds, err := r.getSubsriberIdsFromChatIds(chatIds)
+	if err != nil {
+		return err
+	}
+	query := `
+		INSERT INTO bot_init_subscriberaction
+		(action, subscriber_id, date_time)
+		VALUES
+	`
+	dateTime := time.Now().Format("2006-02-01 15:04:05.999999999") + " +03:00"
+	for _, subscriberId := range subscriberIds {
+		query += fmt.Sprintf("('%s', %d, '%s')", action, subscriberId, dateTime)
+	}
+	_, err = r.db.Exec(query)
+	return err
+}
+
+func (r *BotPostgres) getSubsriberIdsFromChatIds(chatIds []int64) ([]int, error) {
+	var result []int
+	condition := GenerateConditionForUpdatingSubscribers(chatIds)
+	query := fmt.Sprintf("SELECT id from bot_init_subscriber %s", condition)
+	if err := r.db.Select(&result, query); err != nil {
+		fmt.Printf("getSubsriberIdsFromChatIds: query=%s\n", query)
+		fmt.Printf("getSubsriberIdsFromChatIds: %s\n", err.Error())
+		return []int{}, err
+	}
+	return result, nil
 }
 
 func (r *BotPostgres) SaveMessage(message qbot.Message) error {

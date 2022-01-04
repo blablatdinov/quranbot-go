@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 	"qbot"
 	"qbot/pkg/repository"
 	"time"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 type BotService struct {
@@ -85,8 +86,10 @@ func (s *BotService) DeactivateSubscribers(chatIds []int64) error {
 	if len(chatIds) == 0 {
 		return errors.New("len(chatIds) must be more 0")
 	}
-	err := s.repo.DeactivateSubscribers(chatIds)
-	return err
+	if err := s.repo.DeactivateSubscribers(chatIds); err != nil {
+		return err
+	}
+	return s.repo.CreateSubscriberActions(chatIds, "deactivate")
 }
 
 func (s *BotService) GetSubscribersCount(param string) (int, error) {

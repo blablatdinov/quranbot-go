@@ -18,6 +18,7 @@ type Bot interface {
 	SaveMessage(qbot.Message) error
 	BulkSaveMessages(messages []qbot.Message) error
 	CreateMailing() (int, error)
+	CreateSubscriberActions([]int64, string) error
 }
 
 type Content interface {
