@@ -52,7 +52,11 @@ func main() {
 		}
 		adminsList = append(adminsList, int64(adminId))
 	}
-	bot := telegram.NewBot(botApi, services, gocron.NewScheduler(time.UTC), adminsList)
+	timezone, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		log.Fatal("%s", err.Error())
+	}
+	bot := telegram.NewBot(botApi, services, gocron.NewScheduler(timezone), adminsList)
 	flag.Parse()
 	if flag.Args()[0] == "check_subscribers" {
 		if err := bot.CheckSubscribers(); err != nil {

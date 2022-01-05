@@ -369,6 +369,9 @@ func (s *ContentService) GetMorningContentForTodayMailing() ([]qbot.Answer, erro
 	if err != nil {
 		return []qbot.Answer{}, err
 	}
+	if len(contentsForSubscriber) == 0 {
+		return []qbot.Answer{}, errors.New("GetMorningContentForTodayMailing: contentsForSubscriber length = 0")
+	}
 	relativeUrl := strings.Split(contentsForSubscriber[0].Link, "|")[0]
 	link := fmt.Sprintf("Ссылка на [источник](https://umma.ru%s)", relativeUrl)
 	for _, content := range contentsForSubscriber {

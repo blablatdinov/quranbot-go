@@ -2,7 +2,6 @@ package repository
 
 import (
 	"fmt"
-	"log"
 	"qbot"
 	"strings"
 	"time"
@@ -183,8 +182,6 @@ func (r *BotPostgres) getSubsriberIdsFromChatIds(chatIds []int64) ([]int, error)
 	condition := GenerateConditionForUpdatingSubscribers(chatIds)
 	query := fmt.Sprintf("SELECT id from bot_init_subscriber %s", condition)
 	if err := r.db.Select(&result, query); err != nil {
-		fmt.Printf("getSubsriberIdsFromChatIds: query=%s\n", query)
-		fmt.Printf("getSubsriberIdsFromChatIds: %s\n", err.Error())
 		return []int{}, err
 	}
 	return result, nil
@@ -233,10 +230,8 @@ func (r *BotPostgres) BulkSaveMessages(messages []qbot.Message) error {
 		))
 	}
 	values := strings.Join(valuesArray, ",")
-	fmt.Println(values)
 	_, err := r.db.Exec(query + values)
 	if err != nil {
-		log.Printf("Repo layer ERROR: %s\n", err.Error())
 		return err
 	}
 	return nil
