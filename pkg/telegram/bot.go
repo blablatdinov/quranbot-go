@@ -149,7 +149,7 @@ func (b *Bot) runGoroutinesForMassMailing(content *[]qbot.Answer, messagesChan c
 				return
 			}
 		}(messagesChan, &wg)
-		if i % maxMessagePerSecond == 0 {
+		if i%maxMessagePerSecond == 0 {
 			time.Sleep(time.Second * 2)
 		}
 	}
@@ -214,9 +214,6 @@ func (b *Bot) SendMorningContent() error {
 	content, err := b.service.GetMorningContentForTodayMailing()
 	if err != nil {
 		return err
-	}
-	for i := 0; i < 900; i++ {
-		content = append(content, qbot.Answer{ChatId: 358610865, Content: "spam"})
 	}
 	log.Println("Content length:", len(content))
 	chatIdsForUpdateDay, err := b.MassMailing(content)

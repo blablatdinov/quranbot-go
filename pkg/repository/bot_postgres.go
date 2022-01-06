@@ -170,9 +170,11 @@ func (r *BotPostgres) CreateSubscriberActions(chatIds []int64, action string) er
 		VALUES
 	`
 	dateTime := time.Now().Format("2006-02-01 15:04:05.999999999") + " +03:00"
+	values := []string{}
 	for _, subscriberId := range subscriberIds {
-		query += fmt.Sprintf("('%s', %d, '%s')", action, subscriberId, dateTime)
+		values = append(values, fmt.Sprintf("('%s', %d, '%s')", action, subscriberId, dateTime))
 	}
+	query += strings.Join(values, ",")
 	_, err = r.db.Exec(query)
 	return err
 }
