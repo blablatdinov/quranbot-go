@@ -140,6 +140,7 @@ func (b *Bot) runGoroutinesForMassMailing(content *[]qbot.Answer, messagesChan c
 					}
 					log.Printf("Error: send message to %d %s", _elem.ChatId, err.Error())
 					messagesChan <- tgbotapi.Message{MessageID: 0, Chat: &tgbotapi.Chat{ID: _elem.ChatId}}
+					<-maxMessageSendAsync
 					wg.Done()
 					break
 				}
