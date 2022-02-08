@@ -3,7 +3,7 @@ module qbot
 go 1.17
 
 require (
-	github.com/go-co-op/gocron v1.11.0
+	github.com/go-co-op/gocron v1.12.0
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/joho/godotenv v1.4.0
