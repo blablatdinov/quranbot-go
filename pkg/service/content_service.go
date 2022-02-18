@@ -30,18 +30,20 @@ func (s *ContentService) GetAyatByMailingDay(mailingDay int) (string, error) {
 	return content, err
 }
 
-func (s *ContentService) GetAyatBySuraAyatNum(chatId int64, query string, state string) (qbot.Answer, error) {
+// GetAyatBySuraAyatNum найти аят по номеру аята и суры
+func (s *ContentService) GetAyatBySuraAyatNum(chatId int64, query string, state string) ([]qbot.Answer, error) {
 	splittedQuery := strings.Split(query, ":")
 	suraNum, err := strconv.Atoi(strings.TrimSpace(splittedQuery[0]))
 	if err != nil {
-		return qbot.Answer{}, err
+		return []qbot.Answer{}, err
 	}
 	if suraNum < 1 || suraNum > 114 {
-		return qbot.Answer{ChatId: chatId, Content: "Сура не найдена"}, nil
+		answers := []qbot.Answer{{ChatId: chatId, Content: "Сура не найдена"}}
+		return answers, errors.New("sura not found")
 	}
 	ayats, err := s.repo.GetAyatsBySuraNum(suraNum)
 	if err != nil {
-		return qbot.Answer{}, err
+		return []qbot.Answer{}, fmt.Errorf("GetAyatsBySuraNum err: %s", err.Error())
 	}
 	var targetAyat qbot.Ayat
 	for i, ayat := range ayats {
@@ -50,15 +52,25 @@ func (s *ContentService) GetAyatBySuraAyatNum(chatId int64, query string, state 
 			break
 		}
 		if i == len(ayats)-1 {
-			return qbot.Answer{ChatId: chatId, Content: "Аят не найден"}, nil
+			answers := []qbot.Answer{{ChatId: chatId, Content: "Аят не найден"}}
+			return answers, errors.New("ayat not found")
 		}
 	}
 	targetAyat.IsFavorite = s.repo.AyatIsFavorite(chatId, targetAyat.Id)
 	keyboard, err := s.getAyatKeyboard(chatId, targetAyat, state)
 	if err != nil {
-		return qbot.Answer{}, err
+		return []qbot.Answer{}, fmt.Errorf("error generating keyboard %s", err.Error())
 	}
-	return qbot.Answer{ChatId: chatId, Content: renderAyat(targetAyat), Keyboard: keyboard}, nil
+	audioAnswer, err := s.repo.GetAyatAudio(targetAyat)
+	fmt.Printf("Audio answer: %v\n", audioAnswer)
+	if err != nil {
+		return []qbot.Answer{}, fmt.Errorf("error getting audio %s", err.Error())
+	}
+	answers := []qbot.Answer{
+		{ChatId: chatId, Content: renderAyat(targetAyat), Keyboard: keyboard},
+		{ChatId: chatId, Content: audioAnswer.LinkToFile, TgFileId: audioAnswer.TelegramFileId},
+	}
+	return answers, nil
 }
 
 func (s *ContentService) GetFavoriteAyats(chatId int64) (string, tgbotapi.InlineKeyboardMarkup, error) {

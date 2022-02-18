@@ -100,7 +100,7 @@ func (s *BotService) GetSubscribersCount(param string) (int, error) {
 func (s *BotService) SaveMessage(message *tgbotapi.Message, isUnknown bool) {
 	message_ := s.tgbotapiMessageToQbotMessage(*message, 0, isUnknown)
 	if err := s.repo.SaveMessage(message_); err != nil {
-
+		log.Printf("Error saving message: %s", err.Error())
 	}
 }
 

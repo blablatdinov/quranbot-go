@@ -45,6 +45,7 @@ func (r *ContentPostgres) GetAyatByMailingDay(mailingDay int) (qbot.Ayat, error)
 	return ayat, nil
 }
 
+// GetAyatsBySuraNum получить аяты по номеру суры
 func (r *ContentPostgres) GetAyatsBySuraNum(suraNum int) ([]qbot.Ayat, error) {
 	var ayats []qbot.Ayat
 	query := `select 
@@ -60,6 +61,25 @@ func (r *ContentPostgres) GetAyatsBySuraNum(suraNum int) ([]qbot.Ayat, error) {
 		return []qbot.Ayat{}, nil
 	}
 	return ayats, nil
+}
+
+func (r *ContentPostgres) GetAyatAudio(ayat qbot.Ayat) (qbot.Ayat, error) {
+	var result struct{
+		TgFileId string `db:"tg_file_id"`
+		AudioLink string `db:"link_to_file"`
+	}
+	query := `SELECT
+		 f.link_to_file,
+		 f.tg_file_id
+	FROM content_file f
+	INNER JOIN content_ayat a ON a.audio_id = f.id
+	WHERE a.id = $1`
+	if err := r.db.Get(&result, query, ayat.Id); err != nil {
+		return ayat, err
+	}
+	ayat.TelegramFileId = result.TgFileId
+	ayat.LinkToFile = result.AudioLink
+	return ayat, nil
 }
 
 func (r *ContentPostgres) GetFavoriteAyats(chatId int64) ([]qbot.Ayat, error) {

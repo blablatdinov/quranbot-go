@@ -133,11 +133,17 @@ func (b Bot) searchAyatBySuraAyatNum(message *tgbotapi.Message) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("searchAyatBySuraAyatNum: search '%s' ayat\n", message.Text)
-	answer, err := b.service.GetAyatBySuraAyatNum(message.Chat.ID, message.Text, "")
+	log.Printf("%d searchAyatBySuraAyatNum: search '%s' ayat\n", message.Chat.ID, message.Text)
+	answers, err := b.service.GetAyatBySuraAyatNum(message.Chat.ID, message.Text, "")
 	if err != nil {
+		if err.Error() == "sura not found" || err.Error() == "ayat not found" {
+			b.SendMessage(answers[0])
+			return nil
+		}
 		return err
 	}
-	b.SendMessage(answer)
+	for _, answer := range answers {
+		b.SendMessage(answer)
+	}
 	return nil
 }

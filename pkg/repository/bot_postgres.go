@@ -71,6 +71,9 @@ func (r *BotPostgres) GetOrCreateSubscriber(chatId int64) (qbot.Subscriber, bool
 func (r *BotPostgres) SetSubscriberState(chatId int64, step string) error {
 	query := "update bot_init_subscriber set step = $2 where tg_chat_id = $1"
 	_, err := r.db.Exec(query, chatId, step)
+	if err != nil {
+		return fmt.Errorf("error setting subscriber state %s", err.Error())
+	}
 	return err
 }
 

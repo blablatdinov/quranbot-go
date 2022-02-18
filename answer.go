@@ -7,11 +7,10 @@ type Answer struct {
 	ChatId   int64  `db:"tg_chat_id"`
 	Content  string `db:"content"`
 	Keyboard tgbotapi.InlineKeyboardMarkup
+
+	TgFileId string
 }
 
 func (a *Answer) HasKeyboard() bool {
-	if len(a.Keyboard.InlineKeyboard) == 0 {
-		return false
-	}
-	return true
+	return len(a.Keyboard.InlineKeyboard) != 0
 }

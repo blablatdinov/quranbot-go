@@ -38,9 +38,15 @@ func (b *Bot) handleError(chatId int64, err error) error {
 	return nil
 }
 
+// SendMessage отправка сообщения qbot.Answer, возвращемой из сервисов
 func (b *Bot) SendMessage(answer qbot.Answer) (tgbotapi.Message, error) {
+	if answer.TgFileId != "" && !b.bot.Debug {
+		msg := tgbotapi.NewAudioShare(answer.ChatId, answer.TgFileId)
+		return b.bot.Send(msg)
+	}
 	msg := tgbotapi.NewMessage(answer.ChatId, answer.Content)
 	msg.ParseMode = "markdown"
+
 	if answer.HasKeyboard() {
 		msg.ReplyMarkup = answer.Keyboard
 	}

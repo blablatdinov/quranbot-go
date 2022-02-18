@@ -3,8 +3,7 @@ package qbot
 import "fmt"
 
 type Ayat struct {
-	Id int `db:"id"`
-	//AdditionalContent string `db:"additional_content"`
+	Id         int    `db:"id"`
 	Content    string `db:"content"`
 	Arab_text  string `db:"arab_text"`
 	Trans      string `db:"trans"`
@@ -18,6 +17,9 @@ type Ayat struct {
 	Html            string `db:"html"`
 	Audio           int    `db:"audio_id"`
 	One_day_content int    `db:"one_day_content_id"`
+
+	TelegramFileId string `db:"tg_file_id"`
+	LinkToFile     string `db:"link_to_file"`
 }
 
 func (a *Ayat) GetSuraAyatNum() string {

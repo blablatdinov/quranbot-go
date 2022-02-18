@@ -50,7 +50,7 @@ func (b *Bot) Start() error {
 		if err != nil {
 			return err
 		}
-		log.Println("Bot started on long polling...")
+		log.Printf("Bot started on long polling... Debug: %v", b.bot.Debug)
 	} else {
 		// Запуск бота на вебхуак, если указана переменная WEBHOOK_HOST
 		_, err := b.bot.RemoveWebhook()

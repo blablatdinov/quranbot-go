@@ -33,6 +33,7 @@ type Content interface {
 	RemoveFromFavorite(chatId int64, ayatId int) error
 	GetMorningContentForTodayMailing() ([]qbot.MailingContent, error)
 	UpdateDaysForSubscribers([]int64) error
+	GetAyatAudio(ayat qbot.Ayat) (qbot.Ayat, error)
 }
 
 type Prayer interface {
