@@ -8,10 +8,6 @@ import (
 	"os"
 	"qbot"
 	"qbot/pkg/service"
-	"regexp"
-	"strconv"
-	"sync"
-	"time"
 
 	"github.com/go-co-op/gocron"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -111,88 +107,39 @@ func minNumber(a, b int) int {
 	}
 }
 
-// runGoroutinesForMassMailing запуск горутин для массовой рассылки
-func (b *Bot) runGoroutinesForMassMailing(content *[]qbot.Answer, messagesChan chan tgbotapi.Message) {
-	var wg sync.WaitGroup
-	maxMessagePerSecond := 30
-	maxMessageSendAsync := make(chan struct{}, 20)
-	for i, elem := range *content {
-		wg.Add(1)
-		_elem := elem
-		go func(messagesChan chan tgbotapi.Message, wg *sync.WaitGroup) {
-			maxMessageSendAsync <- struct{}{}
-			for {
-				sliceIndex := minNumber(len(_elem.Content), 50)
-				log.Printf("Send message to %d: (%s)...", _elem.ChatId, _elem.Content[:sliceIndex])
-				message, err := b.SendMessage(_elem)
-				if err == nil {
-					<-maxMessageSendAsync
-				}
-				if err != nil {
-					matched, _ := regexp.MatchString("Too Many Requests: retry after", err.Error())
-					if matched {
-						re := regexp.MustCompile("[0-9]+")
-						seconds, _ := strconv.Atoi(re.FindAllString(err.Error(), -1)[0])
-						log.Printf("%s. Sleep", err.Error())
-						time.Sleep(time.Duration(seconds + 1))
-						log.Printf("Error send message to %d \"%s\". Retry send...", _elem.ChatId, err.Error())
-						continue
-					}
-					log.Printf("Error: send message to %d %s", _elem.ChatId, err.Error())
-					messagesChan <- tgbotapi.Message{MessageID: 0, Chat: &tgbotapi.Chat{ID: _elem.ChatId}}
-					<-maxMessageSendAsync
-					wg.Done()
-					break
-				}
-				log.Printf("Message to %d sended", _elem.ChatId)
-				wg.Done()
-				messagesChan <- message
-				return
-			}
-		}(messagesChan, &wg)
-		if i%maxMessagePerSecond == 0 {
-			time.Sleep(time.Second * 2)
-		}
-	}
-	wg.Wait()
-}
-
 // MassMailing функция для массовой рассылки
 func (b *Bot) MassMailing(content []qbot.Answer) ([]int64, error) {
+	if len(content) == 0 {
+		return []int64{}, errors.New("content len == 0")
+	}
 	mailingId, err := b.service.CreateMailing()
-	contentLength := len(content)
 	if err != nil {
 		return []int64{}, err
 	}
-	log.Printf("Start mailing (%d)...", mailingId)
-	messagesChan := make(chan tgbotapi.Message, contentLength)
-	b.runGoroutinesForMassMailing(&content, messagesChan)
-
 	var sendedMessages []tgbotapi.Message
-	var sendedToChatIds []int64
 	var deactivatedSubscriptionIds []int64
-	var counter int
-	for c := range messagesChan {
-		if c.MessageID != 0 {
-			sendedMessages = append(sendedMessages, c)
-			sendedToChatIds = append(sendedToChatIds, c.Chat.ID)
-		} else {
-			deactivatedSubscriptionIds = append(deactivatedSubscriptionIds, c.Chat.ID)
+	var sendedToChatIds []int64
+	log.Printf("Start mailing (%d)...", mailingId)
+	for _, _elem := range content {
+		sliceIndex := minNumber(len(_elem.Content), 50)
+		log.Printf("Send message to %d: (%s)...", _elem.ChatId, _elem.Content[:sliceIndex])
+		message, err := b.SendMessage(_elem)
+		if err != nil {
+			if err.Error() == "FIXME" {
+				deactivatedSubscriptionIds = append(deactivatedSubscriptionIds, _elem.ChatId)
+			}
 		}
-		counter++
-		if counter == contentLength {
-			break
-		}
+		sendedMessages = append(sendedMessages, message)
+		sendedToChatIds = append(sendedToChatIds, message.Chat.ID)
 	}
-
 	log.Printf("Mailing (%d) sended", mailingId)
+	if len(sendedMessages) > 0 {
+		b.service.BulkSaveMessages(sendedMessages, mailingId)
+	}
 	if len(deactivatedSubscriptionIds) > 0 {
 		if err := b.service.DeactivateSubscribers(deactivatedSubscriptionIds); err != nil {
 			return []int64{}, err
 		}
-	}
-	if len(sendedMessages) > 0 {
-		b.service.BulkSaveMessages(sendedMessages, mailingId)
 	}
 	b.sendMessageToAdmins(fmt.Sprintf("Рассылка #%d завершена.", mailingId))
 	return sendedToChatIds, nil
@@ -239,21 +186,4 @@ func (b *Bot) SendPrayerTimes() error {
 		return err
 	}
 	return nil
-}
-
-// difference Найти разницу в двух массивах по ChatId
-// Кейс: произошла рассылка, некоторые подписчики заблокировали бота,
-// чтобы найти тех, кто отписался находим разницу между тем, что должно было отправиться и что фактически отправилось
-func difference(messages []int64, contents []qbot.Answer) []int64 {
-	mb := make(map[int64]struct{}, len(messages))
-	for _, x := range messages {
-		mb[x] = struct{}{}
-	}
-	var diff []int64
-	for _, x := range contents {
-		if _, found := mb[x.ChatId]; !found {
-			diff = append(diff, x.ChatId)
-		}
-	}
-	return diff
 }

@@ -64,8 +64,8 @@ func (r *ContentPostgres) GetAyatsBySuraNum(suraNum int) ([]qbot.Ayat, error) {
 }
 
 func (r *ContentPostgres) GetAyatAudio(ayat qbot.Ayat) (qbot.Ayat, error) {
-	var result struct{
-		TgFileId string `db:"tg_file_id"`
+	var result struct {
+		TgFileId  string `db:"tg_file_id"`
 		AudioLink string `db:"link_to_file"`
 	}
 	query := `SELECT

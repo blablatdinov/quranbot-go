@@ -244,7 +244,7 @@ func (r *BotPostgres) BulkSaveMessages(messages []qbot.Message) error {
 
 func (r *BotPostgres) CreateMailing() (int, error) {
 	var mailingId int
-	query := "insert into bot_init_mailing default values returning id"
+	query := "insert into bot_init_mailing (is_cleaned) values ('f') returning id"
 	row := r.db.QueryRow(query)
 	err := row.Scan(&mailingId)
 	if err != nil {
