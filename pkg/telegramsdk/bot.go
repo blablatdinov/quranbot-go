@@ -3,6 +3,7 @@ package telegramsdk
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -28,8 +29,10 @@ func (b *Bot) GetMe() (GetMeStruct, error) {
 	return botData, nil
 }
 
-func (b *Bot) SendMessage(chatId int64, text string) (Message, error) {
-	response, err := http.Get(b.getUrl(fmt.Sprintf("/sendMessage?chat_id=%d&text=%s", chatId, text)))
+func (b *Bot) sendMessage(chatId int64, text string, keyboard string) (Message, error) {
+	url := b.getUrl(fmt.Sprintf("/sendMessage?chat_id=%d&text=%s&reply_markup=%s", chatId, text, keyboard))
+	fmt.Println(url)
+	response, err := http.Get(url)
 	if err != nil {
 		return Message{}, err
 	}
@@ -49,6 +52,30 @@ func (b *Bot) SendMessage(chatId int64, text string) (Message, error) {
 		},
 	}
 	return message, nil
+}
+
+func (b *Bot) SendMessage(chatId int64, text string) (Message, error) {
+	defaultKeyboard := getDefaultKeyboardJson()
+	return b.sendMessage(chatId, text, defaultKeyboard)
+}
+
+func (b *Bot) SendMessageWithKeyboard(chatId int64, text string, keyboard string) (Message, error) {
+	return b.sendMessage(chatId, text, keyboard)
+}
+
+func getDefaultKeyboardJson() string {
+	defaultKeyboard := InlineKeyboardMarkup{
+		InlineKeyboard: [][]InlineKeyboardButton{{{"hello", "vim"}}},
+	}
+	keyboardJson, err := json.Marshal(defaultKeyboard)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return string(keyboardJson)
+}
+
+func (b *Bot) SendAnswer(answer Answer) (Message, error) {
+	return Message{}, nil
 }
 
 func (b *Bot) getUrl(method string) string {

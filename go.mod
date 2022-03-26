@@ -1,3 +1,3 @@
 module github.com/blablatdinov/quranbot-go
 
-go 1.17
+go 1.18
