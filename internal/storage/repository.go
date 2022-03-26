@@ -8,7 +8,7 @@ import (
 
 type Bot interface {
 	GetSubscriberByChatId(ChatId int64) (core.Subscriber, error)
-	CreateSubscriber(ChatId int64) error
+	CreateSubscriber(ChatId int64, referralCode string) error
 	ActivateSubscriber(chatId int64) error
 }
 

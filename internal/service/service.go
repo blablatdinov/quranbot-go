@@ -3,8 +3,8 @@ package service
 import "github.com/blablatdinov/quranbot-go/internal/storage"
 
 type Bot interface {
-	GetOrCreateSubscriber(chatId int64) (string, error)
-	RegisterSubscriber(chatId int64) error
+	GetOrCreateSubscriber(chatId int64, referralCode string) (string, error)
+	RegisterSubscriber(chatId int64, referralCode string) error
 }
 
 type Service struct {

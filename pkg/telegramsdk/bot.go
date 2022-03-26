@@ -75,6 +75,13 @@ func getDefaultKeyboardJson() string {
 	return string(keyboardJson)
 }
 
+func logMessage(message Message) {
+	if len(message.Text) > 50 {
+		message.Text = message.Text[:50]
+	}
+	log.Printf("Getting message id:%d, chat_id: %d, text: %s...", message.MessageId, message.Chat.Id, message.Text)
+}
+
 func (b *Bot) GetUpdatesChan() chan Message {
 	updatesChan := make(chan Message)
 	go func(updatesChan chan Message) {
@@ -83,7 +90,7 @@ func (b *Bot) GetUpdatesChan() chan Message {
 			messages, lastUpdateId, _ := b.GetUpdates(offset + 1)
 			offset = lastUpdateId
 			for _, message := range messages {
-				log.Printf("Getting message id:%d", message.MessageId)
+				logMessage(message)
 				updatesChan <- message
 			}
 			time.Sleep(updatesTimeout)

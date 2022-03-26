@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/blablatdinov/quranbot-go/internal/service"
@@ -20,8 +21,13 @@ func main() {
 		log.Fatal(err.Error())
 	}
 	for message := range updatesChan {
-		if message.Text == "/start" {
-			text, err := services.GetOrCreateSubscriber(message.Chat.Id)
+		fmt.Println(message.Text)
+		if message.Text[:6] == "/start" {
+			referralCode := "0"
+			if len(message.Text) > 6 {
+				referralCode = message.Text[7:]
+			}
+			text, err := services.GetOrCreateSubscriber(message.Chat.Id, referralCode)
 			if err != nil {
 				log.Fatal(err.Error())
 			}

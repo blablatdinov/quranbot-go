@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"strconv"
+
 	"github.com/blablatdinov/quranbot-go/internal/core"
 	"github.com/jmoiron/sqlx"
 )
@@ -31,11 +33,19 @@ func (r *BotPostgres) GetSubscriberByChatId(chatId int64) (core.Subscriber, erro
 	return subscriber, nil
 }
 
-func (r *BotPostgres) CreateSubscriber(chatId int64) error {
-	query := `INSERT INTO bot_init_subscriber (tg_chat_id, is_active, day) VALUES
-	($1, 't', 2)`
-	_, err := r.db.Exec(query, chatId)
-	return err
+func (r *BotPostgres) CreateSubscriber(chatId int64, referralCode string) error {
+	refererId, err := strconv.Atoi(referralCode)
+	if err != nil && referralCode == "0" {
+		query := `INSERT INTO bot_init_subscriber (tg_chat_id, is_active, day) VALUES
+		($1, 't', 2)`
+		_, err := r.db.Exec(query, chatId)
+		return err
+	} else {
+		query := `INSERT INTO bot_init_subscriber (tg_chat_id, is_active, day, referer_id) VALUES
+		($1, 't', 2, $2)`
+		_, err := r.db.Exec(query, chatId, refererId)
+		return err
+	}
 }
 
 func (r *BotPostgres) ActivateSubscriber(chatId int64) error {
