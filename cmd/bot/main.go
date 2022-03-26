@@ -9,9 +9,9 @@ import (
 
 func main() {
 	bot := telegramsdk.NewBot("452230948:AAFvAXqcuK8xhw1gfGnxlp6zzWQaR9qK7hw")
-	botData, err := bot.GetMe()
+	message, err := bot.SendMessage(358610865, "bot")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	fmt.Println(botData)
+	fmt.Println(message.Result.Date)
 }

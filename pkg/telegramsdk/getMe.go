@@ -1,11 +1,11 @@
 package telegramsdk
 
 type GetMeStruct struct {
-	Ok     bool        `json:"ok"`
-	Result GetMeResult `json:"result"`
+	Ok     bool   `json:"ok"`
+	Result result `json:"result"`
 }
 
-type GetMeResult struct {
+type result struct {
 	Id                      int64  `json:"id"`
 	IsBot                   bool   `json:"is_bot"`
 	FirstName               string `json:"first_name"`
