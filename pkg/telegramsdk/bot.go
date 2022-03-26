@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+const updatesTimeout = 1 * time.Second
+
 type Bot struct {
 	Token string
 }
@@ -31,7 +33,6 @@ func (b *Bot) GetMe() (GetMeStruct, error) {
 
 func (b *Bot) sendMessage(chatId int64, text string, keyboard string) (Message, error) {
 	url := b.getUrl(fmt.Sprintf("/sendMessage?chat_id=%d&text=%s&reply_markup=%s", chatId, text, keyboard))
-	fmt.Println(url)
 	response, err := http.Get(url)
 	if err != nil {
 		return Message{}, err
@@ -41,17 +42,7 @@ func (b *Bot) sendMessage(chatId int64, text string, keyboard string) (Message, 
 	if err = json.NewDecoder(response.Body).Decode(&messageJson); err != nil {
 		return Message{}, err
 	}
-	message := Message{
-		Ok: messageJson.Ok,
-		Result: messageResult{
-			MessageId: messageJson.Result.MessageId,
-			From:      messageJson.Result.From,
-			Chat:      messageJson.Result.Chat,
-			Date:      time.Unix(messageJson.Result.Date, 0),
-			Text:      messageJson.Result.Text,
-		},
-	}
-	return message, nil
+	return messageJsonToMessage(messageJson), nil
 }
 
 func (b *Bot) SendMessage(chatId int64, text string) (Message, error) {
@@ -72,6 +63,44 @@ func getDefaultKeyboardJson() string {
 		log.Fatal(err.Error())
 	}
 	return string(keyboardJson)
+}
+
+func (b *Bot) GetUpdatesChan() chan Message {
+	updatesChan := make(chan Message)
+	go func(updatesChan chan Message) {
+		var offset int64 = 0
+		for {
+			messages, lastUpdateId, _ := b.GetUpdates(offset + 1)
+			offset = lastUpdateId
+			for _, message := range messages {
+				updatesChan <- message
+			}
+			time.Sleep(updatesTimeout)
+		}
+	}(updatesChan)
+	return updatesChan
+}
+
+func (b *Bot) GetUpdates(offset int64) ([]Message, int64, error) {
+	url := b.getUrl(fmt.Sprintf("/getUpdates?offset=%d", offset))
+	response, err := http.Get(url)
+	if err != nil {
+		return []Message{}, 0, err
+	}
+	defer response.Body.Close()
+	var updates UpdatesResponse
+	if err = json.NewDecoder(response.Body).Decode(&updates); err != nil {
+		return []Message{}, 0, err
+	}
+	var messages []Message
+	for _, update := range updates.Updates {
+		messages = append(messages, messageJsonResultToMessage(update.Message))
+	}
+	var lastUpdateIndex int64 = 0
+	if len(updates.Updates) > 0 {
+		lastUpdateIndex = updates.Updates[(len(updates.Updates) - 1)].UpdateId
+	}
+	return messages, lastUpdateIndex, nil
 }
 
 func (b *Bot) SendAnswer(answer Answer) (Message, error) {

@@ -50,15 +50,35 @@ type chat struct {
 	Username  string `json:"username"`
 }
 
-type Message struct {
+type MessageResponse struct {
 	Ok     bool
-	Result messageResult
+	Result Message
 }
 
-type messageResult struct {
+type Message struct {
 	MessageId int
 	From      from
 	Chat      chat
 	Date      time.Time
 	Text      string
+}
+
+func messageJsonToMessage(messageJson MessageJson) Message {
+	return Message{
+		MessageId: messageJson.Result.MessageId,
+		From:      messageJson.Result.From,
+		Chat:      messageJson.Result.Chat,
+		Date:      time.Unix(messageJson.Result.Date, 0),
+		Text:      messageJson.Result.Text,
+	}
+}
+
+func messageJsonResultToMessage(messageJson messageResultJson) Message {
+	return Message{
+		MessageId: messageJson.MessageId,
+		From:      messageJson.From,
+		Chat:      messageJson.Chat,
+		Date:      time.Unix(messageJson.Date, 0),
+		Text:      messageJson.Text,
+	}
 }
