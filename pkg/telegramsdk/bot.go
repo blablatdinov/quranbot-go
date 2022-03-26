@@ -55,8 +55,18 @@ func (b *Bot) SendMessageWithKeyboard(chatId int64, text string, keyboard string
 }
 
 func getDefaultKeyboardJson() string {
-	defaultKeyboard := InlineKeyboardMarkup{
-		InlineKeyboard: [][]InlineKeyboardButton{{{"hello", "vim"}}},
+	defaultKeyboard := ReplyKeyboardMarkup{
+		Keyboard: [][]ReplyKeyboardButton{
+			{
+				{"🎧 Подкасты"},
+			},
+			{
+				{"🕋 Время намаза"},
+			},
+			{
+				{"🌟 Избранное"}, {"🔍 Найти аят"},
+			},
+		},
 	}
 	keyboardJson, err := json.Marshal(defaultKeyboard)
 	if err != nil {
@@ -73,6 +83,7 @@ func (b *Bot) GetUpdatesChan() chan Message {
 			messages, lastUpdateId, _ := b.GetUpdates(offset + 1)
 			offset = lastUpdateId
 			for _, message := range messages {
+				log.Printf("Getting message id:%d", message.MessageId)
 				updatesChan <- message
 			}
 			time.Sleep(updatesTimeout)
