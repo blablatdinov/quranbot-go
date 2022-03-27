@@ -13,7 +13,11 @@ import (
 
 func main() {
 	bot := telegramsdk.NewBot("452230948:AAFvAXqcuK8xhw1gfGnxlp6zzWQaR9qK7hw")
-	updatesChan := bot.GetUpdatesChan()
+	// updatesChan := bot.GetUpdatesChan()
+	updatesChan, err := bot.RunWebhookServer("https://3a1d-87-117-185-236.ngrok.io")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 	db, err := storage.NewPostgres("postgres://almazilaletdinov@localhost:5432/qbot?sslmode=disable")
 	repos := storage.NewRepository(db)
 	services := service.NewService(repos)
@@ -21,8 +25,8 @@ func main() {
 		log.Fatal(err.Error())
 	}
 	for message := range updatesChan {
-		fmt.Println(message.Text)
-		if message.Text[:6] == "/start" {
+		fmt.Printf("message text: %s\n", message.Text)
+		if len(message.Text) > 5 && message.Text[:6] == "/start" {
 			referralCode := "0"
 			if len(message.Text) > 6 {
 				referralCode = message.Text[7:]

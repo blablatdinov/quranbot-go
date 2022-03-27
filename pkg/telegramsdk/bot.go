@@ -2,7 +2,9 @@ package telegramsdk
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -83,6 +85,7 @@ func logMessage(message Message) {
 }
 
 func (b *Bot) GetUpdatesChan() chan Message {
+	log.Printf("Bot started on updates. Timeout before getUpdates: %d\n", updatesTimeout)
 	updatesChan := make(chan Message)
 	go func(updatesChan chan Message) {
 		var offset int64 = 0
@@ -97,6 +100,68 @@ func (b *Bot) GetUpdatesChan() chan Message {
 		}
 	}(updatesChan)
 	return updatesChan
+}
+
+func (b *Bot) DeleteWebhook() error {
+	response, err := http.Get(b.getUrl("/deleteWebhook"))
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != 200 {
+		bytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return err
+		}
+		return errors.New(fmt.Sprintf("Can't delete webhook: %s", string(bytes)))
+	}
+	return nil
+}
+
+func (b *Bot) SetWebhook(host string) error {
+	url := b.getUrl(fmt.Sprintf("/setWebhook?url=%s", host))
+	response, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != 200 {
+		bytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return err
+		}
+		return errors.New(fmt.Sprintf("Can't set webhook: %s", string(bytes)))
+	}
+	return nil
+}
+
+func (b *Bot) RunWebhookServer(host string) (chan Message, error) {
+	updatesChan := make(chan Message)
+	if err := b.DeleteWebhook(); err != nil {
+		return updatesChan, err
+	}
+	if err := b.SetWebhook(host); err != nil {
+		return updatesChan, err
+	}
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		var update Update
+		updatesChan <- messageJsonResultToMessage(update.Message)
+		if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
+			log.Fatal(err.Error())
+		}
+		bytes, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		fmt.Println(string(bytes))
+	})
+	go func() {
+		if err := http.ListenAndServe(":8000", nil); err != nil {
+			log.Fatal(err.Error())
+		}
+	}()
+	log.Println("Bot started on webhook")
+	return updatesChan, nil
 }
 
 func (b *Bot) GetUpdates(offset int64) ([]Message, int64, error) {
