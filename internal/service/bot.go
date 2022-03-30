@@ -18,7 +18,6 @@ func NewBotService(repo storage.Bot) *BotService {
 
 func (s *BotService) GetOrCreateSubscriber(chatId int64, referralCode string) (string, error) {
 	subscriber, err := s.repo.GetSubscriberByChatId(chatId)
-	fmt.Println(subscriber.IsActive)
 	if err == nil {
 		if subscriber.IsActive == true {
 			return "Вы уже зарегистрированы", nil
