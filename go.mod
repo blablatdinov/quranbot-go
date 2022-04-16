@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/go-co-op/gocron v1.13.0
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
-	github.com/jmoiron/sqlx v1.3.4
+	github.com/jmoiron/sqlx v1.3.5
 	github.com/joho/godotenv v1.4.0
 	github.com/lib/pq v1.10.5
 	github.com/stretchr/testify v1.7.1
