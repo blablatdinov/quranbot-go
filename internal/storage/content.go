@@ -14,5 +14,12 @@ func NewContentPostgres(db *sqlx.DB) *ContentRepository {
 }
 
 func (r *ContentRepository) GetAyatsBySuraNum(suraNum int) ([]core.Ayat, error) {
-	return []core.Ayat{}, nil
+	var ayats []core.Ayat
+	query := "SELECT id, ayat FROM content_ayats a" +
+		"INNER JOIN content_sura s on s.id = a.sura_id" +
+		"WHERE s.number = $1"
+	if err := r.db.Select(ayats, query, suraNum); err != nil {
+		return []core.Ayat{}, err
+	}
+	return ayats, nil
 }

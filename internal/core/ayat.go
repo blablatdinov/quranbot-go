@@ -1,6 +1,6 @@
 package core
 
 type Ayat struct {
-	Id   int
-	Ayat string
+	Id   int    `db:"id"`
+	Ayat string `db:"ayat"`
 }
