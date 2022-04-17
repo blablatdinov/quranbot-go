@@ -76,3 +76,41 @@ func (mr *MockBotMockRecorder) GetSubscriberByChatId(ChatId interface{}) *gomock
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscriberByChatId", reflect.TypeOf((*MockBot)(nil).GetSubscriberByChatId), ChatId)
 }
+
+// MockContent is a mock of Content interface.
+type MockContent struct {
+	ctrl     *gomock.Controller
+	recorder *MockContentMockRecorder
+}
+
+// MockContentMockRecorder is the mock recorder for MockContent.
+type MockContentMockRecorder struct {
+	mock *MockContent
+}
+
+// NewMockContent creates a new mock instance.
+func NewMockContent(ctrl *gomock.Controller) *MockContent {
+	mock := &MockContent{ctrl: ctrl}
+	mock.recorder = &MockContentMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockContent) EXPECT() *MockContentMockRecorder {
+	return m.recorder
+}
+
+// GetAyatsBySuraNum mocks base method.
+func (m *MockContent) GetAyatsBySuraNum(suraNum int) ([]core.Ayat, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAyatsBySuraNum", suraNum)
+	ret0, _ := ret[0].([]core.Ayat)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAyatsBySuraNum indicates an expected call of GetAyatsBySuraNum.
+func (mr *MockContentMockRecorder) GetAyatsBySuraNum(suraNum interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAyatsBySuraNum", reflect.TypeOf((*MockContent)(nil).GetAyatsBySuraNum), suraNum)
+}

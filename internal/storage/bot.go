@@ -11,8 +11,6 @@ type BotPostgres struct {
 	db *sqlx.DB
 }
 
-//go:generate mockgen -source=repository.go -destination=mocks/mock.go
-
 func NewBotPostgres(db *sqlx.DB) *BotPostgres {
 	return &BotPostgres{
 		db: db,
