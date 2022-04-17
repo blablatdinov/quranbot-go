@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"fmt"
 	"github.com/blablatdinov/quranbot-go/internal/core"
 	"github.com/jmoiron/sqlx"
 )
@@ -15,10 +16,11 @@ func NewContentPostgres(db *sqlx.DB) *ContentRepository {
 
 func (r *ContentRepository) GetAyatsBySuraNum(suraNum int) ([]core.Ayat, error) {
 	var ayats []core.Ayat
-	query := "SELECT id, ayat FROM content_ayats a" +
-		"INNER JOIN content_sura s on s.id = a.sura_id" +
+	fmt.Println(suraNum)
+	query := "SELECT a.id as id, a.ayat as ayat FROM content_ayat a " +
+		"INNER JOIN content_sura s on s.id = a.sura_id " +
 		"WHERE s.number = $1"
-	if err := r.db.Select(ayats, query, suraNum); err != nil {
+	if err := r.db.Select(&ayats, query, suraNum); err != nil {
 		return []core.Ayat{}, err
 	}
 	return ayats, nil
